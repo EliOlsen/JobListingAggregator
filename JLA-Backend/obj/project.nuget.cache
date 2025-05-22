@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "dgSpecHash": "+83jk7JB/X1lV5WKox7UwSZPEQ4HTH82YJXuj6osog9S5+fUatO+QHnzVEeZ+1GWq1q2Z2PxrhwPRKL97GfTgw==",
+  "success": true,
+  "projectFilePath": "/home/eliolsen/Documents/C#Work/JobListingAggregator/JobListingAggregator/JLA-Backend/JLA-Backend.csproj",
+  "expectedPackageFiles": [
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration/9.0.5/microsoft.extensions.configuration.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration.abstractions/9.0.5/microsoft.extensions.configuration.abstractions.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration.fileextensions/9.0.5/microsoft.extensions.configuration.fileextensions.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration.json/9.0.5/microsoft.extensions.configuration.json.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.fileproviders.abstractions/9.0.5/microsoft.extensions.fileproviders.abstractions.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.fileproviders.physical/9.0.5/microsoft.extensions.fileproviders.physical.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.filesystemglobbing/9.0.5/microsoft.extensions.filesystemglobbing.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.primitives/9.0.5/microsoft.extensions.primitives.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/rabbitmq.client/7.1.2/rabbitmq.client.7.1.2.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/system.io.pipelines/9.0.5/system.io.pipelines.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/system.text.encodings.web/9.0.5/system.text.encodings.web.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/system.text.json/9.0.5/system.text.json.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/system.threading.ratelimiting/8.0.0/system.threading.ratelimiting.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
