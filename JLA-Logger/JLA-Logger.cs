@@ -1,5 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace JLALogger;
 
@@ -15,7 +18,8 @@ public class JLALogger
             Password = "guest", //RabbitMQ default password upon installation
             HostName = "localhost",
             LogExchangeName = "scratchjobs_log",
-            LogFolderPath = Path.Combine(Environment.CurrentDirectory, "logs")
+            LogFolderPath = Path.Combine(Environment.CurrentDirectory, "logs"),
+            LogQueueBindingKeys = ["#"]
         };
         if (!File.Exists(configFilePath))
         {
@@ -57,7 +61,54 @@ public class JLALogger
         }
         //At last, we have a verified good (or at least non-problematic) settings object with verfied non-problematic values. We're able to continue on.
 
-        
+        //Main functionality, getting log messages from RabbitMQ and putting them in a local file for user perusal.
+        //First, set up RabbitMQ connection
+        var factory = new ConnectionFactory
+        {
+            HostName = settings.HostName,
+            UserName = settings.UserName,
+            Password = settings.Password
+        };
+        using var connection = await factory.CreateConnectionAsync();
+        using var channel = await connection.CreateChannelAsync();
+
+        await channel.ExchangeDeclareAsync(exchange: settings.LogExchangeName, type: ExchangeType.Topic);
+
+        // declare a server-named queue
+        QueueDeclareOk queueDeclareResult = await channel.QueueDeclareAsync();
+        string queueName = queueDeclareResult.QueueName;
+
+        //Bind each queue given in args
+        foreach (string? bindingKey in settings.LogQueueBindingKeys)
+        {
+            await channel.QueueBindAsync(queue: queueName, exchange: settings.LogExchangeName, routingKey: bindingKey);
+        }
+
+        //Set up the log file for this session
+        Directory.CreateDirectory(settings.LogFolderPath);
+        StreamWriter sw = File.AppendText(Path.Combine(settings.LogFolderPath, DateTime.Now.ToString("yyyy-MM-dd_HH:mm:ss") + "_log.txt"));
+        sw.AutoFlush = true;
+        Console.SetError(sw);
+
+        //Prep to actually do something with received messages
+        var consumer = new AsyncEventingBasicConsumer(channel);
+        //Actual functionality, currently writes to log file and console
+        consumer.ReceivedAsync += (model, ea) =>
+        {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+            var routingKey = ea.RoutingKey;
+            Console.Error.WriteLine($"{routingKey} - {message}");
+            Console.WriteLine($"{routingKey} - {message}");
+            return Task.CompletedTask;
+        };
+
+        //The call to that functionality above
+        await channel.BasicConsumeAsync(queueName, autoAck: true, consumer: consumer);
+        //And the exit method for this command-line program
+        Console.WriteLine(" [*] Waiting for messages.");
+        Console.WriteLine(" Press [enter] to exit.");
+        Console.ReadLine();
     }
     private static void OutputFormattedConsoleError(string message)
     {

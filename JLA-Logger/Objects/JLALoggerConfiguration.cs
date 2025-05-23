@@ -7,6 +7,7 @@ public class JLALoggerConfiguration
     public required string HostName { get; set; }
     public required string LogExchangeName { get; set; }
     public required string LogFolderPath { get; set; }
+    public required string[] LogQueueBindingKeys { get; set; }
 
     public bool ReplaceEmptyStrings(JLALoggerConfiguration replacements)
     {
@@ -34,6 +35,16 @@ public class JLALoggerConfiguration
         if (this.LogFolderPath is null)
         {
             this.LogFolderPath = replacements.LogFolderPath;
+            output = true;
+        }
+        if (this.LogQueueBindingKeys is null)
+        {
+            this.LogQueueBindingKeys = replacements.LogQueueBindingKeys;
+            output = true;
+        }
+        else if (this.LogQueueBindingKeys.Length == 0)
+        {
+            this.LogQueueBindingKeys = replacements.LogQueueBindingKeys;
             output = true;
         }
 
