@@ -268,6 +268,22 @@
         "build": {
           "buildTransitive/net6.0/_._": {}
         }
+      },
+      "JLA-Library/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "9.0.5",
+          "Microsoft.Extensions.Configuration.Binder": "9.0.5",
+          "Microsoft.Extensions.Configuration.Json": "9.0.5",
+          "RabbitMQ.Client": "7.1.2"
+        },
+        "compile": {
+          "bin/placeholder/JLA-Library.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/JLA-Library.dll": {}
+        }
       }
     }
   },
@@ -713,10 +729,16 @@
         "system.threading.ratelimiting.nuspec",
         "useSharedDesignerContext.txt"
       ]
+    },
+    "JLA-Library/1.0.0": {
+      "type": "project",
+      "path": "../JLA-Library/JLA-Library.csproj",
+      "msbuildProject": "../JLA-Library/JLA-Library.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "JLA-Library >= 1.0.0",
       "Microsoft.Extensions.Configuration >= 9.0.5",
       "Microsoft.Extensions.Configuration.Binder >= 9.0.5",
       "Microsoft.Extensions.Configuration.Json >= 9.0.5",
@@ -747,7 +769,11 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/home/eliolsen/Documents/C#Work/JobListingAggregator/JobListingAggregator/JLA-Library/JLA-Library.csproj": {
+              "projectPath": "/home/eliolsen/Documents/C#Work/JobListingAggregator/JobListingAggregator/JLA-Library/JLA-Library.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
