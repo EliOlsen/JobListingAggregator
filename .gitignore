@@ -402,3 +402,6 @@ FodyWeavers.xsd
 
 #User Configuration Files
 config.json
+
+#Logger logs
+**/*_log.txt
