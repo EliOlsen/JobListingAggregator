@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using JLALibrary;
 
 namespace JLALogger;
 
