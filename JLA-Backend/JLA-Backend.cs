@@ -65,7 +65,7 @@ public class JLABackend
                 //Some will go to parse the sites. Others will generate fallback dummy listings to link to sites. This dictionary controls which are which.
                 //All functions will have to have the same parameters using this approach.
                 //I know I want to return a list of job listings, but I don't know what I want the common parameters to be yet.
-                Dictionary<Jobsite, Func<Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, Task<List<GenericJobListing>>>> handlerDictionary = new()
+                Dictionary<Jobsite, Func<Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
                 {
                     {Jobsite.LinkedIn, PollAndParseJobSiteForListings}, //For now, since I don't have any of these functions, I'll leave them with a default option.
                     {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
@@ -145,7 +145,7 @@ public class JLABackend
                         {
                             if (js != Jobsite.Error && js != Jobsite.Dummy && js != Jobsite.All)
                             {
-                                listings.AddRange(await handlerDictionary[js](js, urlDictionary, parseByJobsite[js]));
+                                listings.AddRange(await handlerDictionary[js](js, urlDictionary, parseByJobsite[js], request));
                             }
                         }
                         response = JsonSerializer.Serialize(listings);
@@ -153,7 +153,7 @@ public class JLABackend
 
                     default:
                         //default - this is a normal jobsite, so call its handler function
-                        listings = await handlerDictionary[jobsite](jobsite, urlDictionary, parseByJobsite[jobsite]);
+                        listings = await handlerDictionary[jobsite](jobsite, urlDictionary, parseByJobsite[jobsite], request);
                         response = JsonSerializer.Serialize(listings);
                         break;
                 }
@@ -177,12 +177,12 @@ public class JLABackend
         Console.ReadLine();
     }
 
-    static Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    static Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         return Task.FromResult(new List<GenericJobListing> { });
     }
 
-    static Task<List<GenericJobListing>> GenerateProxyListing(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    static Task<List<GenericJobListing>> GenerateProxyListing(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         List<GenericJobListing> output = [];
         Random rnd = new Random();
@@ -199,7 +199,7 @@ public class JLABackend
         return Task.FromResult(output);
     }
 
-    static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         //To do: Ensure that passed parameters are usable, before doing anything else.
         if (!parseApproachDictionary.ContainsKey("master") || !urlDictionary.ContainsKey(jobsite))
@@ -230,19 +230,21 @@ public class JLABackend
         foreach (string listing in brokenUpListings)
         {
             //Third step, get the individual values
+            string fallback = "ERROR";
             GenericJobListing job = new() //If I cannot parse one of these, I want the fallback value to display as error in client - better for me when using, so I can easily spot problems
             {
-                Title = TryParseList(listing, "Title", "ERROR", parseApproachDictionary),
-                Company = TryParseList(listing, "Company", "ERROR", parseApproachDictionary),
-                JobsiteId = TryParseList(listing, "JobsiteId", "ERROR", parseApproachDictionary),
-                Location = TryParseList(listing, "Location", "ERROR", parseApproachDictionary),
-                PostDateTime = TryParseList(listing, "PostDateTime", "ERROR", parseApproachDictionary),
-                LinkToJobListing = TryParseList(listing, "LinkToJobListing", "ERROR", parseApproachDictionary),
+                Title = TryParseList(listing, "Title", fallback, parseApproachDictionary),
+                Company = TryParseList(listing, "Company", fallback, parseApproachDictionary),
+                JobsiteId = TryParseList(listing, "JobsiteId", fallback, parseApproachDictionary),
+                Location = TryParseList(listing, "Location", fallback, parseApproachDictionary),
+                PostDateTime = TryParseList(listing, "PostDateTime", fallback, parseApproachDictionary),
+                LinkToJobListing = TryParseList(listing, "LinkToJobListing", fallback, parseApproachDictionary),
             };
             //To do: Fourth step, filter listing based on request specifications beyond what is in the URL
-
-            //Assuming all is well,
-            output.Add(job);
+            if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms) && true && true)
+            {
+                output.Add(job);
+            }
         }
         return output;
     }
