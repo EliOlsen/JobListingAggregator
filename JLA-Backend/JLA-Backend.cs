@@ -241,9 +241,11 @@ public class JLABackend
                 LinkToJobListing = TryParseList(listing, "LinkToJobListing", fallback, parseApproachDictionary),
             };
             //To do: Fourth step, filter listing based on request specifications beyond what is in the URL
+            DateTime theoreticalJobPostTime = PostDateTimeEstimateFromVagueString(job.PostDateTime);
+            TimeSpan gracePeriod = new(1, 0, 0);// In an ideal world this would be 0, but right now I want it high to I trend toward seeing mistakes, not missing mistakes.
             if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms)
             && Array.IndexOf(request.CompanyFilterTerms, job.Company) == -1
-            && true)
+            && DateTime.Compare(theoreticalJobPostTime.Add(gracePeriod), request.CutoffTime) >= 0)
             {
                 output.Add(job);
             }
@@ -251,7 +253,7 @@ public class JLABackend
         return output;
     }
 
-    public static string TryParseList(string input, string propertyName, string fallback, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    private static string TryParseList(string input, string propertyName, string fallback, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
     {
         if (!parseApproachDictionary.TryGetValue(propertyName, out List<ParseApproach>? value))
         {
@@ -266,6 +268,21 @@ public class JLABackend
             if (output != string.Empty) break;
         }
         return output != string.Empty ? output : fallback;
+    }
+
+    private static DateTime PostDateTimeEstimateFromVagueString(string postDateTime)
+    {//Different sites have different formats, and absolutely none of them are very specific. This logic matches them as accurately as the lowest common denominator allows.
+        int hoursAgo = 0;
+        int minutesAgo = 0;
+        int graceSeconds = 10;
+        if (postDateTime.Contains("hour", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = int.Parse(postDateTime.Split(" ")[0]);
+        else if (postDateTime.Contains("minute", StringComparison.CurrentCultureIgnoreCase)) minutesAgo = int.Parse(postDateTime.Split(" ")[0]);
+        else if (postDateTime.Contains("today", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 0;
+        else if (postDateTime.Contains("day", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24;
+        else if (postDateTime.Contains("week", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7;
+        else if (postDateTime.Contains("month", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30;
+        else if (postDateTime.Contains("year", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30 * 12;
+        return DateTime.Now.Subtract(new TimeSpan(hoursAgo, minutesAgo, graceSeconds));
     }
     
 }
