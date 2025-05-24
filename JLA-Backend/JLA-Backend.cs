@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Backend.Models;
@@ -21,7 +22,8 @@ public class JLABackend
             Password = "guest", //RabbitMQ default password upon installation
             HostName = "localhost",
             LogExchangeName = "scratchjobs_log",
-            QueueName = "scratchjobs_queue"
+            QueueName = "scratchjobs_queue",
+            UserAgent = "??"
         };
         JLABackendConfiguration settings = await new UserJsonConfiguration<JLABackendConfiguration>().RetrieveAndValidateSettings(DefaultConfiguration, configFilePath);
         //Configuration acquired. Now, to establish the RabbitMQ setup we need.
@@ -43,6 +45,13 @@ public class JLABackend
         string routingKeyBase = "Backend";
         await RMQLog.LogAsync(routingKeyBase + ".info", "Backend Initialized", instanceId, channel, settings.LogExchangeName);
         var consumer = new AsyncEventingBasicConsumer(channel);
+
+        //establishing the default call information
+        HttpClient client = new();
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
+        //client.DefaultRequestHeaders.Add("User-Agent", "??"); //Haven't decided exactly how I'm formatting this yet.
+        
         //Now, to set up the receivedAsync logic
         consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs ea) =>
         {
@@ -65,7 +74,7 @@ public class JLABackend
                 //Some will go to parse the sites. Others will generate fallback dummy listings to link to sites. This dictionary controls which are which.
                 //All functions will have to have the same parameters using this approach.
                 //I know I want to return a list of job listings, but I don't know what I want the common parameters to be yet.
-                Dictionary<Jobsite, Func<Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
+                Dictionary<Jobsite, Func<HttpClient, Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
                 {
                     {Jobsite.LinkedIn, PollAndParseJobSiteForListings}, //For now, since I don't have any of these functions, I'll leave them with a default option.
                     {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
@@ -145,7 +154,7 @@ public class JLABackend
                         {
                             if (js != Jobsite.Error && js != Jobsite.Dummy && js != Jobsite.All)
                             {
-                                listings.AddRange(await handlerDictionary[js](js, urlDictionary, parseByJobsite[js], request));
+                                listings.AddRange(await handlerDictionary[js](client, js, urlDictionary, parseByJobsite[js], request));
                             }
                         }
                         response = JsonSerializer.Serialize(listings);
@@ -153,7 +162,7 @@ public class JLABackend
 
                     default:
                         //default - this is a normal jobsite, so call its handler function
-                        listings = await handlerDictionary[jobsite](jobsite, urlDictionary, parseByJobsite[jobsite], request);
+                        listings = await handlerDictionary[jobsite](client, jobsite, urlDictionary, parseByJobsite[jobsite], request);
                         response = JsonSerializer.Serialize(listings);
                         break;
                 }
@@ -177,12 +186,12 @@ public class JLABackend
         Console.ReadLine();
     }
 
-    static Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
+    static Task<List<GenericJobListing>> Placeholder(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         return Task.FromResult(new List<GenericJobListing> { });
     }
 
-    static Task<List<GenericJobListing>> GenerateProxyListing(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
+    static Task<List<GenericJobListing>> GenerateProxyListing(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         List<GenericJobListing> output = [];
         Random rnd = new Random();
@@ -199,22 +208,20 @@ public class JLABackend
         return Task.FromResult(output);
     }
 
-    static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
+    static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
-        //To do: Ensure that passed parameters are usable, before doing anything else.
+        //Ensure that passed parameters are usable, before doing anything else.
         if (!parseApproachDictionary.ContainsKey("master") || !urlDictionary.ContainsKey(jobsite))
         {
-            //We don't have a master parsing approach, and therefore cannot process our data.
-            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings was passed invalid data, and cannot process. Returning empty list.");
+            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings was not passed a master parseApproach or valid url, and cannot process. Returning empty list.");
             return [];
         }
-        //To do: First step, which is to actually call the URL
-        string rawHTML = null; //Gotta fill this in with a fetch request using the URL
+        //First step, which is to actually call the URL
+        string rawHTML = await client.GetStringAsync(urlDictionary[jobsite]);
         //Second step, break up the giant block of html into chunks, per listing
         List<string> brokenUpListings = [];
         for (int i = 0; i < parseApproachDictionary["master"].Count; i++)
         {
-            //iterate through parse approaches; stop when one works.
             ParseApproach currentApproach = parseApproachDictionary["master"][i];
             brokenUpListings = StringMunging.BreakStringIntoStringsOnStartAndEndSubstrings(rawHTML, currentApproach.PreSubstring, currentApproach.PostSubstring);
             if (brokenUpListings.Count > 0) break;
@@ -240,7 +247,7 @@ public class JLABackend
                 PostDateTime = TryParseList(listing, "PostDateTime", fallback, parseApproachDictionary),
                 LinkToJobListing = TryParseList(listing, "LinkToJobListing", fallback, parseApproachDictionary),
             };
-            //To do: Fourth step, filter listing based on request specifications beyond what is in the URL
+            //Fourth step, filter listing based on request specifications beyond what is in the URL
             DateTime theoreticalJobPostTime = PostDateTimeEstimateFromVagueString(job.PostDateTime);
             TimeSpan gracePeriod = new(1, 0, 0);// In an ideal world this would be 0, but right now I want it high to I trend toward seeing mistakes, not missing mistakes.
             if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms)
@@ -274,7 +281,6 @@ public class JLABackend
     {//Different sites have different formats, and absolutely none of them are very specific. This logic matches them as accurately as the lowest common denominator allows.
         int hoursAgo = 0;
         int minutesAgo = 0;
-        int graceSeconds = 10;
         if (postDateTime.Contains("hour", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = int.Parse(postDateTime.Split(" ")[0]);
         else if (postDateTime.Contains("minute", StringComparison.CurrentCultureIgnoreCase)) minutesAgo = int.Parse(postDateTime.Split(" ")[0]);
         else if (postDateTime.Contains("today", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 0;
@@ -282,7 +288,7 @@ public class JLABackend
         else if (postDateTime.Contains("week", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7;
         else if (postDateTime.Contains("month", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30;
         else if (postDateTime.Contains("year", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30 * 12;
-        return DateTime.Now.Subtract(new TimeSpan(hoursAgo, minutesAgo, graceSeconds));
+        return DateTime.Now.Subtract(new TimeSpan(hoursAgo, minutesAgo, 0));
     }
     
 }

@@ -7,4 +7,5 @@ public class JLABackendConfiguration
     public required string HostName { get; set; }
     public required string LogExchangeName { get; set; }
     public required string QueueName { get; set; }
+    public required string UserAgent { get; set; }
 }
