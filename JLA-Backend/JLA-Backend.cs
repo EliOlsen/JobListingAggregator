@@ -241,7 +241,9 @@ public class JLABackend
                 LinkToJobListing = TryParseList(listing, "LinkToJobListing", fallback, parseApproachDictionary),
             };
             //To do: Fourth step, filter listing based on request specifications beyond what is in the URL
-            if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms) && true && true)
+            if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms)
+            && Array.IndexOf(request.CompanyFilterTerms, job.Company) == -1
+            && true)
             {
                 output.Add(job);
             }
