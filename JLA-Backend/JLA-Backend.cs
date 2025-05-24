@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Backend.Models;
 using JLABackend.Models;
@@ -79,6 +80,17 @@ public class JLABackend
                 if (request is not null) Enum.TryParse(request.Source, true, out jobsite);
                 //From that Jobsite, I can use a switch to perform the expected behavior. Also, so long as Jobsite isn't Error, we know Request isn't null.
                 //establish variables for use within various switch branches
+                RegionInfo regionInfo = new RegionInfo(new CultureInfo(request?.CultureInfoString is not null ? request.CultureInfoString : "en-us", false).LCID);
+                Dictionary<Jobsite, string> urlDictionary = new Dictionary<Jobsite, string>//Needs further refinement, but will do for now.
+                {//These are the links to the specific URLs I'll either be calling or using as placeholder listings.
+                 //Not sure if I should shift these out to a config file. Probably not - proper interjection of request variables should mean the only time the actual format changes is when the URL format itself is changed, and that's something I'll have to maintain myself
+                 //Note: Location is, uh, a crapshoot. Everything from city (easy) to 'geoid', which, what? I can obtain my own, personal location values by the same method I obtained these URLs, but that's a black box for the geoid.
+                    {Jobsite.LinkedIn, $"https://www.linkedin.com/jobs/search/?distance={request.Radius}&f_E=2%2C3&f_TPR=r86400&geoId={request.GeoId}&keywords={request.SearchTerms.Replace(" ", "%20")}&origin=JOB_SEARCH_PAGE_JOB_FILTER" },
+                    {Jobsite.BuiltIn, $"https://builtin.com/jobs/remote/hybrid/office/{request.BuiltInJobCategory}/entry-level?search={request.SearchTerms.Replace(" ", "%20")}&daysSinceUpdated=1&city={request.City.Replace(" ", "%20")}&state={request.State.Replace(" ", "%20")}&country={regionInfo.ThreeLetterISORegionName}"},
+                    {Jobsite.Dice, $"https://www.dice.com/platform/jobs?filters.postedDate=ONE&filters.employmentType=FULLTIME&filters.employerType=Direct+Hire&filters.workplaceTypes=Remote%7COn-Site%7CHybrid&radius={request.Radius}&countryCode={regionInfo.TwoLetterISORegionName}&latitude={request.Latitude}&location={request.City.Replace(" ", "+")}%2C+{request.StateAbbrev}%2C+{regionInfo.ThreeLetterISORegionName}&locationPrecision=City&longitude={request.Longitude}&q={request.SearchTerms.Replace(" ", "+")}&radiusUnit=mi"},
+                    {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
+                    {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.State.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,11_IC1142551_KO12,29.htm?fromAge=1&maxSalary={request.MaxSalary}&minSalary={request.MinSalary}"}
+                };
                 List<GenericJobListing> listings = new List<GenericJobListing>();
                 //Then switch!
                 switch (jobsite)
