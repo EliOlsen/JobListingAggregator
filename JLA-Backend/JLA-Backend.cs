@@ -65,13 +65,13 @@ public class JLABackend
                 //Some will go to parse the sites. Others will generate fallback dummy listings to link to sites. This dictionary controls which are which.
                 //All functions will have to have the same parameters using this approach.
                 //I know I want to return a list of job listings, but I don't know what I want the common parameters to be yet.
-                Dictionary<Jobsite, Func<Task<List<GenericJobListing>>>> handlerDictionary = new()
+                Dictionary<Jobsite, Func<Jobsite, Dictionary<Jobsite, string>, Task<List<GenericJobListing>>>> handlerDictionary = new()
                 {
                     {Jobsite.LinkedIn, Placeholder}, //For now, since I don't have any of these functions, I'll leave them with a default option.
                     {Jobsite.BuiltIn, Placeholder},
                     {Jobsite.Dice, Placeholder},
-                    {Jobsite.Indeed, Placeholder},
-                    {Jobsite.Glassdoor, Placeholder}
+                    {Jobsite.Indeed, GenerateProxyListing},
+                    {Jobsite.Glassdoor, GenerateProxyListing}
                 };
                 //Now, having this setup, and expecting a RequestSpecification object in the message, I can pull out the expected Jobsite option.
                 Jobsite jobsite = Jobsite.Error;
@@ -117,7 +117,7 @@ public class JLABackend
                         {
                             if (js != Jobsite.Error && js != Jobsite.Dummy && js != Jobsite.All)
                             {
-                                listings.AddRange(await handlerDictionary[js]());
+                                listings.AddRange(await handlerDictionary[js](js, urlDictionary));
                             }
                         }
                         response = JsonSerializer.Serialize(listings);
@@ -125,7 +125,7 @@ public class JLABackend
 
                     default:
                         //default - this is a normal jobsite, so call its handler function
-                        listings = await handlerDictionary[jobsite]();
+                        listings = await handlerDictionary[jobsite](jobsite, urlDictionary);
                         response = JsonSerializer.Serialize(listings);
                         break;
                 }
@@ -149,8 +149,25 @@ public class JLABackend
         Console.ReadLine();
     }
 
-    static async Task<List<GenericJobListing>> Placeholder()
+    static async Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary)
     {
         return new List<GenericJobListing> { };
+    }
+
+    static Task<List<GenericJobListing>> GenerateProxyListing(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary)
+    {
+        List<GenericJobListing> output = [];
+        Random rnd = new Random();
+        output.Add(new GenericJobListing
+        {
+            Title = jobsite.ToString() + " Jobs",
+            Company = jobsite.ToString() + " - etc",
+            JobsiteId = jobsite.ToString() + rnd.Next(0, 9999999), //I intend to use these ids to ensure uniqueness on the client side (compared against jobs already in memory). Since these proxy listings are meant to pop up every time they're called, here I give them sufficiently unique identifiers.
+            Location = "None / various",
+            PostDateTime = DateTime.Now.ToString(),
+            LinkToJobListing = urlDictionary[jobsite]
+        }
+        );
+        return Task.FromResult(output);
     }
 }
