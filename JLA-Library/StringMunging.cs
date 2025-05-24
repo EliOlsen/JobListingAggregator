@@ -1,3 +1,7 @@
+using System.Reflection.Metadata.Ecma335;
+using System.Text.RegularExpressions;
+using System.Xml;
+
 namespace JLALibrary;
 
 public static class StringMunging
@@ -62,4 +66,20 @@ public static class StringMunging
         return output;
     }
 
+    public static bool StringContainsNoneOfSubstringsInArray(string input, string[] substrings)
+    {//This is a LITTLE more complicated than it appears; assume the substrings are all complete words, don't disqualify for word fragments that match, only full words.
+        foreach (string substring in substrings)
+        {
+            Regex reg = new("\\W" + substring + "\\W");
+            if (input.Contains(substring))
+            {
+                int occurence = input.IndexOf(substring);
+                if (occurence == 0) reg = new(substring + "\\W");
+                else if (occurence + substring.Length == input.Length) reg = new("\\W" + substring);
+                bool match = reg.IsMatch(input);
+                if (match) return false;
+            }
+        }
+        return true;
+    }
 }
