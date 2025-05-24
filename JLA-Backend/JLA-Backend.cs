@@ -65,7 +65,7 @@ public class JLABackend
                 //Some will go to parse the sites. Others will generate fallback dummy listings to link to sites. This dictionary controls which are which.
                 //All functions will have to have the same parameters using this approach.
                 //I know I want to return a list of job listings, but I don't know what I want the common parameters to be yet.
-                Dictionary<Jobsite, Func<Jobsite, Dictionary<Jobsite, string>, Task<List<GenericJobListing>>>> handlerDictionary = new()
+                Dictionary<Jobsite, Func<Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, Task<List<GenericJobListing>>>> handlerDictionary = new()
                 {
                     {Jobsite.LinkedIn, Placeholder}, //For now, since I don't have any of these functions, I'll leave them with a default option.
                     {Jobsite.BuiltIn, Placeholder},
@@ -91,6 +91,34 @@ public class JLABackend
                     {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
                     {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.State.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,11_IC1142551_KO12,29.htm?fromAge=1&maxSalary={request.MaxSalary}&minSalary={request.MinSalary}"}
                 };
+
+                //Finally, I definitely want the exact specifics of parsing individual pieces of data to be configurable outside the program. Standardizing will also make it much more concise. As such: Parse approach!
+                //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
+                //A list of ParseApproach is the order in which they should be tried, flowing down to the next if the previous didn't give a valid output, and only submitting an empty string if all fail
+                //A dictionary relates each list of ParseApproaches with the property they're meant for
+                //A dictionary relates each dictionary of properties and approaches to the jobsite they're meant for.
+                Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>> parseByJobsite = new Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>
+                {
+                    {Jobsite.LinkedIn, new Dictionary<string, List<ParseApproach>>
+                        {
+                            {"Company", new List<ParseApproach>
+                                {
+                                    new ParseApproach
+                                    {
+                                        PreSubstring = "",
+                                        PostSubstring = "",
+                                        KeepPreSubstring = false,
+                                        KeepPostSubstring = false,
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+
+
+
+
                 List<GenericJobListing> listings = new List<GenericJobListing>();
                 //Then switch!
                 switch (jobsite)
@@ -117,7 +145,7 @@ public class JLABackend
                         {
                             if (js != Jobsite.Error && js != Jobsite.Dummy && js != Jobsite.All)
                             {
-                                listings.AddRange(await handlerDictionary[js](js, urlDictionary));
+                                listings.AddRange(await handlerDictionary[js](js, urlDictionary, parseByJobsite[js]));
                             }
                         }
                         response = JsonSerializer.Serialize(listings);
@@ -125,7 +153,7 @@ public class JLABackend
 
                     default:
                         //default - this is a normal jobsite, so call its handler function
-                        listings = await handlerDictionary[jobsite](jobsite, urlDictionary);
+                        listings = await handlerDictionary[jobsite](jobsite, urlDictionary, parseByJobsite[jobsite]);
                         response = JsonSerializer.Serialize(listings);
                         break;
                 }
@@ -149,12 +177,12 @@ public class JLABackend
         Console.ReadLine();
     }
 
-    static async Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary)
+    static async Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
     {
         return new List<GenericJobListing> { };
     }
 
-    static Task<List<GenericJobListing>> GenerateProxyListing(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary)
+    static Task<List<GenericJobListing>> GenerateProxyListing(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
     {
         List<GenericJobListing> output = [];
         Random rnd = new Random();
@@ -170,4 +198,60 @@ public class JLABackend
         );
         return Task.FromResult(output);
     }
+
+    static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    {
+        //To do: Ensure that passed parameters are usable, before doing anything else.
+        if (!parseApproachDictionary.ContainsKey("master") || !urlDictionary.ContainsKey(jobsite))
+        {
+            //We don't have a master parsing approach, and therefore cannot process our data.
+            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings was passed invalid data, and cannot process. Returning empty list.");
+            return [];
+        }
+        //To do: First step, which is to actually call the URL
+        string rawHTML = null; //Gotta fill this in with a fetch request using the URL
+        //Second step, break up the giant block of html into chunks, per listing
+        List<string> brokenUpListings = [];
+        for (int i = 0; i < parseApproachDictionary["master"].Count; i++)
+        {
+            //iterate through parse approaches; stop when one works.
+            ParseApproach currentApproach = parseApproachDictionary["master"][i];
+            brokenUpListings = StringMunging.BreakStringIntoStringsOnStartAndEndSubstrings(rawHTML, currentApproach.PreSubstring, currentApproach.PostSubstring);
+            if (brokenUpListings.Count > 0) break;
+        }
+        //if, having gone through the entire list, we still have nothing? toss out a warning and return empty list.
+        FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings found no listings. Returning empty list.");
+        if (brokenUpListings.Count < 1) return [];
+        //Here is where we know we're going to return SOMETHING.
+        List<GenericJobListing> output = [];
+        foreach (string listing in brokenUpListings)
+        {
+            GenericJobListing job = new() //If I cannot parse one of these, I want the fallback value to display as error in client - better for me when using, so I can easily spot problems
+            {
+                Title = "ERROR",
+                Company = "ERROR",
+                JobsiteId = "ERROR",
+                Location = "ERROR",
+                PostDateTime = "ERROR",
+                LinkToJobListing = "ERROR"
+            };
+            //To do: Third step, get the individual values
+            string title = string.Empty;
+            for (int i = 0; i < parseApproachDictionary["title"].Count; i++)
+            {
+                //iterate through parse approaches; stop when one works.
+                ParseApproach currentApproach = parseApproachDictionary["title"][i];
+                title = StringMunging.TryGetSubString(rawHTML, currentApproach.PreSubstring, currentApproach.PostSubstring, currentApproach.KeepPreSubstring, currentApproach.KeepPostSubstring);
+                if (title != string.Empty) break;
+            }
+            job.Title = title != string.Empty ? title : job.Title;
+
+            //To do: Fourth step, filter listing based on request specifications beyond what is in the URL
+
+            //Assuming all is well,
+            output.Add(job);
+        }
+        return output;
+    }
+    
 }
