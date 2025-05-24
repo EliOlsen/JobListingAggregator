@@ -67,8 +67,8 @@ public class JLABackend
                 //I know I want to return a list of job listings, but I don't know what I want the common parameters to be yet.
                 Dictionary<Jobsite, Func<Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, Task<List<GenericJobListing>>>> handlerDictionary = new()
                 {
-                    {Jobsite.LinkedIn, Placeholder}, //For now, since I don't have any of these functions, I'll leave them with a default option.
-                    {Jobsite.BuiltIn, Placeholder},
+                    {Jobsite.LinkedIn, PollAndParseJobSiteForListings}, //For now, since I don't have any of these functions, I'll leave them with a default option.
+                    {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
                     {Jobsite.Dice, Placeholder},
                     {Jobsite.Indeed, GenerateProxyListing},
                     {Jobsite.Glassdoor, GenerateProxyListing}
@@ -177,9 +177,9 @@ public class JLABackend
         Console.ReadLine();
     }
 
-    static async Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    static Task<List<GenericJobListing>> Placeholder(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
     {
-        return new List<GenericJobListing> { };
+        return Task.FromResult(new List<GenericJobListing> { });
     }
 
     static Task<List<GenericJobListing>> GenerateProxyListing(Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
@@ -220,38 +220,48 @@ public class JLABackend
             if (brokenUpListings.Count > 0) break;
         }
         //if, having gone through the entire list, we still have nothing? toss out a warning and return empty list.
-        FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings found no listings. Returning empty list.");
-        if (brokenUpListings.Count < 1) return [];
+        if (brokenUpListings.Count < 1)
+        {
+            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings found no listings. Returning empty list.");
+            return [];
+        }
         //Here is where we know we're going to return SOMETHING.
         List<GenericJobListing> output = [];
         foreach (string listing in brokenUpListings)
         {
+            //Third step, get the individual values
             GenericJobListing job = new() //If I cannot parse one of these, I want the fallback value to display as error in client - better for me when using, so I can easily spot problems
             {
-                Title = "ERROR",
-                Company = "ERROR",
-                JobsiteId = "ERROR",
-                Location = "ERROR",
-                PostDateTime = "ERROR",
-                LinkToJobListing = "ERROR"
+                Title = TryParseList(listing, "Title", "ERROR", parseApproachDictionary),
+                Company = TryParseList(listing, "Company", "ERROR", parseApproachDictionary),
+                JobsiteId = TryParseList(listing, "JobsiteId", "ERROR", parseApproachDictionary),
+                Location = TryParseList(listing, "Location", "ERROR", parseApproachDictionary),
+                PostDateTime = TryParseList(listing, "PostDateTime", "ERROR", parseApproachDictionary),
+                LinkToJobListing = TryParseList(listing, "LinkToJobListing", "ERROR", parseApproachDictionary),
             };
-            //To do: Third step, get the individual values
-            string title = string.Empty;
-            for (int i = 0; i < parseApproachDictionary["title"].Count; i++)
-            {
-                //iterate through parse approaches; stop when one works.
-                ParseApproach currentApproach = parseApproachDictionary["title"][i];
-                title = StringMunging.TryGetSubString(rawHTML, currentApproach.PreSubstring, currentApproach.PostSubstring, currentApproach.KeepPreSubstring, currentApproach.KeepPostSubstring);
-                if (title != string.Empty) break;
-            }
-            job.Title = title != string.Empty ? title : job.Title;
-
             //To do: Fourth step, filter listing based on request specifications beyond what is in the URL
 
             //Assuming all is well,
             output.Add(job);
         }
         return output;
+    }
+
+    public static string TryParseList(string input, string propertyName, string fallback, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    {
+        if (!parseApproachDictionary.TryGetValue(propertyName, out List<ParseApproach>? value))
+        {
+            return fallback;
+        }
+        string output = string.Empty;
+        for (int i = 0; i < value.Count; i++)
+        {
+            //iterate through parse approaches; stop when one works.
+            ParseApproach currentApproach = value[i];
+            output = StringMunging.TryGetSubString(input, currentApproach.PreSubstring, currentApproach.PostSubstring, currentApproach.KeepPreSubstring, currentApproach.KeepPostSubstring);
+            if (output != string.Empty) break;
+        }
+        return output != string.Empty ? output : fallback;
     }
     
 }
