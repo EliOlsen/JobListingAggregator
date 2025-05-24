@@ -74,6 +74,7 @@ public class JLABackend
                 };
                 //Now, having this setup, and expecting a RequestSpecification object in the message, I can pull out the expected Jobsite option.
                 Jobsite jobsite = Jobsite.Error;
+                message = Encoding.UTF8.GetString(body);
                 RequestSpecifications? request = JsonSerializer.Deserialize<RequestSpecifications>(message);
                 if (request is not null) Enum.TryParse(request.Source, true, out jobsite);
                 //From that Jobsite, I can use a switch to perform the expected behavior. Also, so long as Jobsite isn't Error, we know Request isn't null.
@@ -130,6 +131,10 @@ public class JLABackend
                 await RMQLog.LogAsync(routingKeyBase + ".info", "Response sent by Backend about data from source: " + message + " on channel of " + ch, instanceId, channel, settings.LogExchangeName);
             }
         };
+        await channel.BasicConsumeAsync(settings.QueueName, false, consumer);
+        Console.WriteLine(" [x] Awaiting RPC requests");
+        Console.WriteLine(" Press [enter] to exit.");
+        Console.ReadLine();
     }
 
     static async Task<List<GenericJobListing>> Placeholder()
