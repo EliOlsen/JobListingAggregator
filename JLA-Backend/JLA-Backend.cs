@@ -27,9 +27,29 @@ public class JLABackend
             UserAgent = "??"
         };
         JLABackendConfiguration settings = await new UserJsonConfiguration<JLABackendConfiguration>().RetrieveAndValidateSettings(DefaultConfiguration, configFilePath);
-        //Configuration acquired. Now, to establish the RabbitMQ setup we need.
+        //Configuration acquired. Establishing the default HTTP information is next
+        HttpClient client = new();
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
+        //client.DefaultRequestHeaders.Add("User-Agent", "??"); //Haven't decided exactly how I'm formatting this yet.
+        //HttpClient information handled. Now to set the variables that won't be changing depending on received data.
 
-        string instanceId = Guid.NewGuid().ToString();
+        //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
+        //A list of ParseApproach is the order in which they should be tried, flowing down to the next if the previous didn't give a valid output, and only submitting an empty string if all fail
+        //A dictionary relates each list of ParseApproaches with the property they're meant for
+        //A dictionary relates each dictionary of properties and approaches to the jobsite they're meant for.
+        Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>? parseByJobsite = DefaultParserApproach.GetDefault();
+        //Establishing the function to enum relationship, another thing I only want to do once
+        Dictionary<Jobsite, Func<HttpClient, Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
+                {
+                    {Jobsite.LinkedIn, PollAndParseJobSiteForListings},
+                    {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
+                    {Jobsite.Dice, Placeholder}, //Dice is tricky one; it tends to display an order of magnitude more listings than the others.
+                    {Jobsite.Indeed, GenerateProxyListing},
+                    {Jobsite.Glassdoor, GenerateProxyListing}
+                };
+        //Finally, establish the RabbitMQ connections
+        string instanceId = Guid.NewGuid().ToString(); //Right now this is purely for meta purposes, mainly logging. Each session has a unique ID to attach to log messages
         var factory = new ConnectionFactory
         {
             HostName = settings.HostName,
@@ -46,29 +66,6 @@ public class JLABackend
         string routingKeyBase = "Backend";
         await RMQLog.LogAsync(routingKeyBase + ".info", "Backend Initialized", instanceId, channel, settings.LogExchangeName);
         var consumer = new AsyncEventingBasicConsumer(channel);
-
-        //establishing the default call information
-        HttpClient client = new();
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
-        //client.DefaultRequestHeaders.Add("User-Agent", "??"); //Haven't decided exactly how I'm formatting this yet.
-
-        //Grabbing our parser data, which I only want to do once, so I'm doing it out here.
-        //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
-        //A list of ParseApproach is the order in which they should be tried, flowing down to the next if the previous didn't give a valid output, and only submitting an empty string if all fail
-        //A dictionary relates each list of ParseApproaches with the property they're meant for
-        //A dictionary relates each dictionary of properties and approaches to the jobsite they're meant for.
-        Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>? parseByJobsite = DefaultParserApproach.GetDefault();
-        //Establishing the function to enum relationship, another thing I only want to do once
-        Dictionary<Jobsite, Func<HttpClient, Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
-                {
-                    {Jobsite.LinkedIn, PollAndParseJobSiteForListings},
-                    {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
-                    {Jobsite.Dice, Placeholder}, //Dice is tricky one; it tends to display an order of magnitude more listings than the others.
-                    {Jobsite.Indeed, GenerateProxyListing},
-                    {Jobsite.Glassdoor, GenerateProxyListing}
-                };
-        
         //Now, to set up the receivedAsync logic
         consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs ea) =>
         {
@@ -162,12 +159,10 @@ public class JLABackend
         Console.WriteLine(" Press [enter] to exit.");
         Console.ReadLine();
     }
-
     static Task<List<GenericJobListing>> Placeholder(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         return Task.FromResult(new List<GenericJobListing> { });
     }
-
     static Task<List<GenericJobListing>> GenerateProxyListing(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         List<GenericJobListing> output = [];
@@ -184,7 +179,6 @@ public class JLABackend
         );
         return Task.FromResult(output);
     }
-
     static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         //Ensure that passed parameters are usable, before doing anything else.
@@ -236,7 +230,6 @@ public class JLABackend
         }
         return output;
     }
-
     private static string TryParseList(string input, string propertyName, string fallback, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
     {
         if (!parseApproachDictionary.TryGetValue(propertyName, out List<ParseApproach>? value))
@@ -253,7 +246,6 @@ public class JLABackend
         }
         return output != string.Empty ? output : fallback;
     }
-
     private static DateTime PostDateTimeEstimateFromVagueString(string postDateTime)
     {//Different sites have different formats, and absolutely none of them are very specific. This logic matches them as accurately as the lowest common denominator allows.
         int hoursAgo = 0;
