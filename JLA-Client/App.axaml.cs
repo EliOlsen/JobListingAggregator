@@ -37,8 +37,14 @@ public partial class App : Application
         }
         //Acquire Configuration from file
         JLAClientConfiguration configuration = await ConfigurationFileService.RetrieveStartupConfiguration();
+        //Instantiate my services for my objects
+        ListObjectsFileService<DisplayableJobListing> listingsFileService = new();
+        listingsFileService.SetFilePath(configuration.ListingsSourcePath);
+        ListObjectsFileService<ScheduleRule> rulesFileService = new();
+        rulesFileService.SetFilePath(configuration.RulesSourcePath);
         //Initial periodic item save in case of computer crash
         _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));
+        //Done with initialization
         base.OnFrameworkInitializationCompleted();
     }
 
@@ -72,7 +78,7 @@ public partial class App : Application
     }
     private async Task SaveToFile()
     {
-        //A call to the listings and rules services goes here
+        //A call to the listings and rules services goes here, as well as a pull from the mainviewmodel
     }
 
     private async Task RecurringSaveToFile(TimeSpan interval, CancellationToken cancellationToken = default)
