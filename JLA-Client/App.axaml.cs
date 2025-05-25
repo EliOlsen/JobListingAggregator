@@ -7,6 +7,9 @@ using JLA_Client.ViewModels;
 using JLA_Client.Views;
 using JLAClient.Services;
 using JLAClient.Models;
+using System.Threading.Tasks;
+using System;
+using System.Threading;
 
 namespace JLA_Client;
 
@@ -32,7 +35,10 @@ public partial class App : Application
             };
             desktop.ShutdownRequested += DesktopOnShutdownRequested;
         }
+        //Acquire Configuration from file
         JLAClientConfiguration configuration = await ConfigurationFileService.RetrieveStartupConfiguration();
+        //Initial periodic item save in case of computer crash
+        _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));
         base.OnFrameworkInitializationCompleted();
     }
 
@@ -48,9 +54,34 @@ public partial class App : Application
             BindingPlugins.DataValidators.Remove(plugin);
         }
     }
-
+   private bool _canClose; // This flag is used to check if window is allowed to close
     private async void DesktopOnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
-        //Saving my listings and rules to file, before shutting down
+        e.Cancel = !_canClose; // cancel closing event first time
+
+        if (!_canClose)
+        {
+            await SaveToFile();
+            // Set _canClose to true and Close this Window again
+            _canClose = true;
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.Shutdown();
+            }
+        }
+    }
+    private async Task SaveToFile()
+    {
+        //A call to the listings and rules services goes here
+    }
+
+    private async Task RecurringSaveToFile(TimeSpan interval, CancellationToken cancellationToken = default)
+    {
+        using PeriodicTimer timer = new(interval);
+        while (true)
+        {
+            await SaveToFile();
+            await timer.WaitForNextTickAsync(cancellationToken);
+        }
     }
 }
