@@ -1,4 +1,4 @@
-namespace Backend.Models;
+namespace JLALibrary.Models;
 public class GenericJobListing
 {
     public required string Title { get; set; }

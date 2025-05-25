@@ -1,4 +1,4 @@
-namespace Backend.Models;
+namespace JLALibrary.Models;
 
 public class RequestSpecifications
 {
