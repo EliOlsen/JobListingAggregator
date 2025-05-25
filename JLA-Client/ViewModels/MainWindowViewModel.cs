@@ -21,7 +21,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     /// <param name="jobListing">the jobListing to add</param>
     [RelayCommand]
-    private void AddListing(ListingViewModel jobListing)
+    public void AddListing(ListingViewModel jobListing)
     {
         // Add a new listing to the list
         Listings.Add(jobListing);
@@ -31,7 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     /// <param name="jobListing">the jobListing to remove</param>
     [RelayCommand]
-    private void RemoveListing(ListingViewModel jobListing)
+    public void RemoveListing(ListingViewModel jobListing)
     {
         // Remove the given listing from the list
         Listings.Remove(jobListing);
@@ -41,7 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Removes all Listings from the list
     /// </summary>
     [RelayCommand]
-    private void ClearListings()
+    public void ClearListings()
     {
         Listings.Clear();
     }
@@ -49,7 +49,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Appends all DisplayableJobListings of a list that are not already in Listings
     /// </summary>
     /// <param name="newListings">the DisplayableJobListings to append if unique</param>
-    public bool AppendListings(List<DisplayableJobListing> newListings)
+    public bool AppendListings(IEnumerable<DisplayableJobListing> newListings)
     {
         foreach (DisplayableJobListing displayableListing in newListings)
         {   //Check that our listing id is not null, and that a listing with that id is not already present
@@ -74,7 +74,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     /// <param name="rule">the rule to add</param>
     [RelayCommand]
-    private void AddRule(RuleViewModel rule)
+    public void AddRule(RuleViewModel rule)
     {
         // Add a new rule to the list
         Rules.Add(rule);
@@ -84,7 +84,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     /// <param name="rule">the rule to remove</param>
     [RelayCommand]
-    private void RemoveRule(RuleViewModel rule)
+    public void RemoveRule(RuleViewModel rule)
     {
         // Remove the given rule from the list
         Rules.Remove(rule);
@@ -94,7 +94,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Removes all Rules from the list
     /// </summary>
     [RelayCommand]
-    private void ClearRules()
+    public void ClearRules()
     {
         Rules.Clear();
     }
@@ -102,7 +102,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Appends all ScheduleRules of a list that are not already in Rules
     /// </summary>
     /// <param name="newRules">the ScheduleRules to append if unique</param>
-    public bool AppendRules(List<ScheduleRule> newRules)
+    public bool AppendRules(IEnumerable<ScheduleRule> newRules)
     {
         foreach (ScheduleRule scheduleRule in newRules)
         {   //Check that our rule name is not null, and that a rule with that name is not already present

@@ -3,7 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using JLA_Client.ViewModels;
+using JLAClient.ViewModels;
 using JLA_Client.Views;
 using JLAClient.Services;
 using JLAClient.Models;
@@ -42,8 +42,25 @@ public partial class App : Application
         listingsFileService.SetFilePath(configuration.ListingsSourcePath);
         ListObjectsFileService<ScheduleRule> rulesFileService = new();
         rulesFileService.SetFilePath(configuration.RulesSourcePath);
+        // get the listings to load
+        var listingsLoaded = await listingsFileService.LoadFromFileAsync();
+
+        if (listingsLoaded is not null)
+        {
+            _mainViewModel.AppendListings(listingsLoaded);
+        }
+        //Get effective last save time (before it's overwritten) for passing to RabbitMQ service initialization
+        DateTime? lastTimeListingsSaved = listingsFileService.GetLastTimeListingsSavedToFile();
+        //get existing automatic update rules
+        var scheduledRules = await rulesFileService.LoadFromFileAsync() ?? null;
+        if(scheduledRules is not null)
+        {
+            _mainViewModel.AppendRules(scheduledRules);
+        }
         //Initial periodic item save in case of computer crash
         _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));
+        //Initialize the RabbitMQ system and pass it the rules so it knows what to automatically send out
+        //TODO: Above line
         //Done with initialization
         base.OnFrameworkInitializationCompleted();
     }
