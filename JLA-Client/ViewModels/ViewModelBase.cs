@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace JLA_Client.ViewModels;
+namespace JLAClient.ViewModels;
 
 public class ViewModelBase : ObservableObject
 {

@@ -8,5 +8,5 @@ public class ScheduleRule()
     public required int Interval { get; set; }
     public required TimeSpan DailyStartTime { get; set; }
     public required TimeSpan DailyEndTime { get; set; }
-    public required RequestSpecifications Specifications { get; set; }
+    public required RequestSpecifications RequestSpecifications { get; set; }
 }

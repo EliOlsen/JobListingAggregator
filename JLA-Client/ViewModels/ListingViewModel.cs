@@ -44,7 +44,7 @@ public partial class ListingViewModel : ViewModelBase
     /// Gets a JobListing of this ViewModel
     /// </summary>
     /// <returns>The JobListing</returns>
-    public DisplayableJobListing GetJobListing()
+    public DisplayableJobListing GetDisplayableJobListing()
     {
         return new DisplayableJobListing()
         {
