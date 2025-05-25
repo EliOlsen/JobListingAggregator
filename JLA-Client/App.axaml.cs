@@ -1,11 +1,12 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using JLA_Client.ViewModels;
 using JLA_Client.Views;
+using JLAClient.Services;
+using JLAClient.Models;
 
 namespace JLA_Client;
 
@@ -15,8 +16,10 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
     }
+    //reference to main view model.
+    private readonly MainWindowViewModel _mainViewModel = new();
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -27,8 +30,9 @@ public partial class App : Application
             {
                 DataContext = new MainWindowViewModel(),
             };
+            desktop.ShutdownRequested += DesktopOnShutdownRequested;
         }
-
+        JLAClientConfiguration configuration = await ConfigurationFileService.RetrieveStartupConfiguration();
         base.OnFrameworkInitializationCompleted();
     }
 
@@ -43,5 +47,10 @@ public partial class App : Application
         {
             BindingPlugins.DataValidators.Remove(plugin);
         }
+    }
+
+    private async void DesktopOnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
+    {
+        //Saving my listings and rules to file, before shutting down
     }
 }
