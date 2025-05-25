@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Backend.Models;
 using JLABackend.Models;
+using JLABackend.Data;
 using JLALibrary;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -53,14 +54,20 @@ public class JLABackend
         //client.DefaultRequestHeaders.Add("User-Agent", "??"); //Haven't decided exactly how I'm formatting this yet.
 
         //Grabbing our parser data, which I only want to do once, so I'm doing it out here.
-        //(I'll do this properly later, for now I just want to get it in.)
-        string[] jsonString = File.ReadAllLines(@"parserDefinition.json");
-        Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>? parseByJobsite = JsonSerializer.Deserialize<Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>>(jsonString[0]);
-        if (parseByJobsite is null)
-        {
-            FormattedConsoleOuptut.Error("parser file was not read properly, and is somehow null.");
-            System.Environment.Exit(1);
-        }
+        //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
+        //A list of ParseApproach is the order in which they should be tried, flowing down to the next if the previous didn't give a valid output, and only submitting an empty string if all fail
+        //A dictionary relates each list of ParseApproaches with the property they're meant for
+        //A dictionary relates each dictionary of properties and approaches to the jobsite they're meant for.
+        Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>? parseByJobsite = DefaultParserApproach.GetDefault();
+        //Establishing the function to enum relationship, another thing I only want to do once
+        Dictionary<Jobsite, Func<HttpClient, Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
+                {
+                    {Jobsite.LinkedIn, PollAndParseJobSiteForListings},
+                    {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
+                    {Jobsite.Dice, Placeholder}, //Dice is tricky one; it tends to display an order of magnitude more listings than the others.
+                    {Jobsite.Indeed, GenerateProxyListing},
+                    {Jobsite.Glassdoor, GenerateProxyListing}
+                };
         
         //Now, to set up the receivedAsync logic
         consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs ea) =>
@@ -80,19 +87,7 @@ public class JLABackend
             try
             {
                 //Here is where I will actually do stuff with the incoming request, to formulate a response to send back.
-                //Step 1: associate each supposed job site with a function. This function will be the one to use to return data.
-                //Some will go to parse the sites. Others will generate fallback dummy listings to link to sites. This dictionary controls which are which.
-                //All functions will have to have the same parameters using this approach.
-                //I know I want to return a list of job listings, but I don't know what I want the common parameters to be yet.
-                Dictionary<Jobsite, Func<HttpClient, Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
-                {
-                    {Jobsite.LinkedIn, PollAndParseJobSiteForListings}, //For now, since I don't have any of these functions, I'll leave them with a default option.
-                    {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
-                    {Jobsite.Dice, Placeholder},
-                    {Jobsite.Indeed, GenerateProxyListing},
-                    {Jobsite.Glassdoor, GenerateProxyListing}
-                };
-                //Now, having this setup, and expecting a RequestSpecification object in the message, I can pull out the expected Jobsite option.
+                //Step 1: Having this setup, and expecting a RequestSpecification object in the message, I can pull out the expected Jobsite option.
                 Jobsite jobsite = Jobsite.Error;
                 message = Encoding.UTF8.GetString(body);
                 RequestSpecifications? request = JsonSerializer.Deserialize<RequestSpecifications>(message);
@@ -110,11 +105,6 @@ public class JLABackend
                     {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
                     {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.State.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,11_IC1142551_KO12,29.htm?fromAge=1&maxSalary={request.MaxSalary}&minSalary={request.MinSalary}"}
                 };
-                //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
-                //A list of ParseApproach is the order in which they should be tried, flowing down to the next if the previous didn't give a valid output, and only submitting an empty string if all fail
-                //A dictionary relates each list of ParseApproaches with the property they're meant for
-                //A dictionary relates each dictionary of properties and approaches to the jobsite they're meant for.
-                //And it's all in a file! I'll read it properly later. This works for now.
                 List<GenericJobListing> listings = new List<GenericJobListing>();
                 //Then switch!
                 switch (jobsite)

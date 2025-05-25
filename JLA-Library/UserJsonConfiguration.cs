@@ -13,16 +13,16 @@ public class UserJsonConfiguration<T>
             return defaultConfiguration; //Not sure I actually want to do this
         }
         if (!File.Exists(configFilePath))
+        {
+            //If file does not exist, make a default one and close program with error message
+            FormattedConsoleOuptut.Error("Error: configuration file not found. Generating default file at " + configFilePath + " and exiting program. Please edit config file to reflect desired configuration.");
+            using (var fs = File.Create(configFilePath))
             {
-                //If file does not exist, make a default one and close program with error message
-                FormattedConsoleOuptut.Error("Error: configuration file not found. Generating default file at " + configFilePath + " and exiting program. Please edit config file to reflect desired configuration.");
-                using (var fs = File.Create(configFilePath))
-                {
-                    //serialize default configuration object into file for user to edit (set up inside a dictionary like so for proper format used when retrieving later)
-                    await JsonSerializer.SerializeAsync(fs, new Dictionary<string, T> { { defaultConfiguration.GetType().Name, defaultConfiguration } });
-                }
-                System.Environment.Exit(1);
+                //serialize default configuration object into file for user to edit (set up inside a dictionary like so for proper format used when retrieving later)
+                await JsonSerializer.SerializeAsync(fs, new Dictionary<string, T> { { defaultConfiguration.GetType().Name, defaultConfiguration } });
             }
+            System.Environment.Exit(1);
+        }
         //Knowing now that the configuration file does exist, we'll move on to building the configuration
         var configuration = new ConfigurationBuilder().AddJsonFile(configFilePath, optional: false, reloadOnChange: true).Build();
         T? settings = defaultConfiguration;
