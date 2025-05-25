@@ -51,6 +51,16 @@ public class JLABackend
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
         //client.DefaultRequestHeaders.Add("User-Agent", "??"); //Haven't decided exactly how I'm formatting this yet.
+
+        //Grabbing our parser data, which I only want to do once, so I'm doing it out here.
+        //(I'll do this properly later, for now I just want to get it in.)
+        string[] jsonString = File.ReadAllLines(@"parserDefinition.json");
+        Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>? parseByJobsite = JsonSerializer.Deserialize<Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>>(jsonString[0]);
+        if (parseByJobsite is null)
+        {
+            FormattedConsoleOuptut.Error("parser file was not read properly, and is somehow null.");
+            System.Environment.Exit(1);
+        }
         
         //Now, to set up the receivedAsync logic
         consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs ea) =>
@@ -100,34 +110,11 @@ public class JLABackend
                     {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
                     {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.State.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,11_IC1142551_KO12,29.htm?fromAge=1&maxSalary={request.MaxSalary}&minSalary={request.MinSalary}"}
                 };
-
-                //Finally, I definitely want the exact specifics of parsing individual pieces of data to be configurable outside the program. Standardizing will also make it much more concise. As such: Parse approach!
                 //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
                 //A list of ParseApproach is the order in which they should be tried, flowing down to the next if the previous didn't give a valid output, and only submitting an empty string if all fail
                 //A dictionary relates each list of ParseApproaches with the property they're meant for
                 //A dictionary relates each dictionary of properties and approaches to the jobsite they're meant for.
-                Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>> parseByJobsite = new Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>
-                {
-                    {Jobsite.LinkedIn, new Dictionary<string, List<ParseApproach>>
-                        {
-                            {"Company", new List<ParseApproach>
-                                {
-                                    new ParseApproach
-                                    {
-                                        PreSubstring = "",
-                                        PostSubstring = "",
-                                        KeepPreSubstring = false,
-                                        KeepPostSubstring = false,
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-
-
-
-
+                //And it's all in a file! I'll read it properly later. This works for now.
                 List<GenericJobListing> listings = new List<GenericJobListing>();
                 //Then switch!
                 switch (jobsite)
