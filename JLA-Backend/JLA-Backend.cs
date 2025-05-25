@@ -250,7 +250,7 @@ public class JLABackend
                 string currentURL = url + $"&page={i}";
                 rawHTML = await client.GetStringAsync(currentURL);
             }
-            output.AddRange(await PollAndParseJobSiteForListings(client, jobsite, url, parseApproachDictionary, request));
+            output.AddRange(await PollAndParseJobSiteForListings(client, jobsite, rawHTML, parseApproachDictionary, request));
             //Spacer to avoid spamming Dice with 10+ requests all at once - don't know if this is necessary, but it fits the design philosophy
             if (i != numberOfPages) Thread.Sleep(new TimeSpan(0, 0, rnd.Next(1, 5)));
         }
