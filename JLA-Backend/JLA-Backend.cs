@@ -40,11 +40,11 @@ public class JLABackend
         //A dictionary relates each dictionary of properties and approaches to the jobsite they're meant for.
         Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>? parseByJobsite = DefaultParserApproach.GetDefault();
         //Establishing the function to enum relationship, another thing I only want to do once
-        Dictionary<Jobsite, Func<HttpClient, Jobsite, Dictionary<Jobsite, string>, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
+        Dictionary<Jobsite, Func<HttpClient, Jobsite, string, Dictionary<string, List<ParseApproach>>, RequestSpecifications, Task<List<GenericJobListing>>>> handlerDictionary = new()
                 {
                     {Jobsite.LinkedIn, PollAndParseJobSiteForListings},
                     {Jobsite.BuiltIn, PollAndParseJobSiteForListings},
-                    {Jobsite.Dice, Placeholder}, //Dice is tricky one; it tends to display an order of magnitude more listings than the others.
+                    {Jobsite.Dice, DicePaginatedPollAndParseJobSiteForListings}, //Dice is tricky one; it tends to display an order of magnitude more listings than the others.
                     {Jobsite.Indeed, GenerateProxyListing},
                     {Jobsite.Glassdoor, GenerateProxyListing}
                 };
@@ -94,7 +94,7 @@ public class JLABackend
                 RegionInfo regionInfo = new RegionInfo(new CultureInfo(request?.CultureInfoString is not null ? request.CultureInfoString : "en-us", false).LCID);
                 Dictionary<Jobsite, string> urlDictionary = new Dictionary<Jobsite, string>//Needs further refinement, but will do for now.
                 {//These are the links to the specific URLs I'll either be calling or using as placeholder listings.
-                 //Not sure if I should shift these out to a config file. Probably not - proper interjection of request variables should mean the only time the actual format changes is when the URL format itself is changed, and that's something I'll have to maintain myself
+                 //Not sure if I should shift these out to a data class. Probably not - proper interjection of request variables should mean the only time the actual format changes is when the URL format itself is changed, and that's something I'll have to maintain myself
                  //Note: Location is, uh, a crapshoot. Everything from city (easy) to 'geoid', which, what? I can obtain my own, personal location values by the same method I obtained these URLs, but that's a black box for the geoid.
                     {Jobsite.LinkedIn, $"https://www.linkedin.com/jobs/search/?distance={request.Radius}&f_E=2%2C3&f_TPR=r86400&geoId={request.GeoId}&keywords={request.SearchTerms.Replace(" ", "%20")}&origin=JOB_SEARCH_PAGE_JOB_FILTER" },
                     {Jobsite.BuiltIn, $"https://builtin.com/jobs/remote/hybrid/office/{request.BuiltInJobCategory}/entry-level?search={request.SearchTerms.Replace(" ", "%20")}&daysSinceUpdated=1&city={request.City.Replace(" ", "%20")}&state={request.State.Replace(" ", "%20")}&country={regionInfo.ThreeLetterISORegionName}"},
@@ -102,7 +102,7 @@ public class JLABackend
                     {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
                     {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.State.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,11_IC1142551_KO12,29.htm?fromAge=1&maxSalary={request.MaxSalary}&minSalary={request.MinSalary}"}
                 };
-                List<GenericJobListing> listings = new List<GenericJobListing>();
+                List<GenericJobListing> listings = [];
                 //Then switch!
                 switch (jobsite)
                 {
@@ -128,7 +128,7 @@ public class JLABackend
                         {
                             if (js != Jobsite.Error && js != Jobsite.Dummy && js != Jobsite.All)
                             {
-                                listings.AddRange(await handlerDictionary[js](client, js, urlDictionary, parseByJobsite[js], request));
+                                listings.AddRange(await handlerDictionary[js](client, js, urlDictionary[js], parseByJobsite[js], request));
                             }
                         }
                         response = JsonSerializer.Serialize(listings);
@@ -136,7 +136,7 @@ public class JLABackend
 
                     default:
                         //default - this is a normal jobsite, so call its handler function
-                        listings = await handlerDictionary[jobsite](client, jobsite, urlDictionary, parseByJobsite[jobsite], request);
+                        listings = await handlerDictionary[jobsite](client, jobsite, urlDictionary[jobsite], parseByJobsite[jobsite], request);
                         response = JsonSerializer.Serialize(listings);
                         break;
                 }
@@ -163,7 +163,7 @@ public class JLABackend
     {
         return Task.FromResult(new List<GenericJobListing> { });
     }
-    static Task<List<GenericJobListing>> GenerateProxyListing(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
+    static Task<List<GenericJobListing>> GenerateProxyListing(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         List<GenericJobListing> output = [];
         Random rnd = new Random();
@@ -174,21 +174,21 @@ public class JLABackend
             JobsiteId = jobsite.ToString() + rnd.Next(0, 9999999), //I intend to use these ids to ensure uniqueness on the client side (compared against jobs already in memory). Since these proxy listings are meant to pop up every time they're called, here I give them sufficiently unique identifiers.
             Location = "None / various",
             PostDateTime = DateTime.Now.ToString(),
-            LinkToJobListing = urlDictionary[jobsite]
+            LinkToJobListing = url
         }
         );
         return Task.FromResult(output);
     }
-    static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
+    static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         //Ensure that passed parameters are usable, before doing anything else.
-        if (!parseApproachDictionary.ContainsKey("master") || !urlDictionary.ContainsKey(jobsite))
+        if (!parseApproachDictionary.ContainsKey("master"))
         {
-            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings was not passed a master parseApproach or valid url, and cannot process. Returning empty list.");
+            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings was not passed a master parseApproach and cannot process. Returning empty list.");
             return [];
         }
         //First step, which is to actually call the URL
-        string rawHTML = await client.GetStringAsync(urlDictionary[jobsite]);
+        string rawHTML = await client.GetStringAsync(url);
         //Second step, break up the giant block of html into chunks, per listing
         List<string> brokenUpListings = [];
         for (int i = 0; i < parseApproachDictionary["master"].Count; i++)
@@ -227,6 +227,32 @@ public class JLABackend
             {
                 output.Add(job);
             }
+        }
+        return output;
+    }
+    static async Task<List<GenericJobListing>> DicePaginatedPollAndParseJobSiteForListings(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
+    {//I'll fully genericize this later; LinkedIn and BuiltIn theoretically have multiple pages, but unlike Dice don't have the frequency of new listings to absolutely require parsing more than the first page...
+        Random rnd = new Random();
+        List<GenericJobListing> output = [];
+        string rawHTMLPageOne = await client.GetStringAsync(url);
+        string numPagesString = StringMunging.TryGetSubString(rawHTMLPageOne, "pageCount\\\":", ",", false, false);
+        numPagesString = numPagesString == String.Empty ? "1" : numPagesString;
+        int numberOfPages = int.Parse(numPagesString);
+        for (int i = 1; i <= numberOfPages; i++)
+        {
+            string rawHTML;
+            if (i == 1)
+            {
+                rawHTML = rawHTMLPageOne;
+            }
+            else
+            {
+                string currentURL = url + $"&page={i}";
+                rawHTML = await client.GetStringAsync(currentURL);
+            }
+            output.AddRange(await PollAndParseJobSiteForListings(client, jobsite, url, parseApproachDictionary, request));
+            //Spacer to avoid spamming Dice with 10+ requests all at once - don't know if this is necessary, but it fits the design philosophy
+            if (i != numberOfPages) Thread.Sleep(new TimeSpan(0, 0, rnd.Next(1, 5)));
         }
         return output;
     }
