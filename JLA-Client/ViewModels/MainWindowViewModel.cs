@@ -10,7 +10,6 @@ namespace JLAClient.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public string Greeting { get; } = "Welcome to Avalonia!";
     /// <summary>
     /// Gets a collection of <see cref="DisplayableJobListing"/> which allows adding and removing listings
     /// </summary>
@@ -70,7 +69,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public ObservableCollection<RuleViewModel> Rules { get; } = [];
 
     /// <summary>
-    /// This command is used to add a new Rules to the List
+    /// This command is used to add a new Rule to the List
     /// </summary>
     /// <param name="rule">the rule to add</param>
     [RelayCommand]
