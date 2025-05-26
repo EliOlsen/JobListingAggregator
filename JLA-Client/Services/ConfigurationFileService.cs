@@ -12,8 +12,8 @@ public class ConfigurationFileService()
         string configFilePath = Path.Combine(Environment.CurrentDirectory, "config.json");
         JLAClientConfiguration DefaultConfiguration = new()
         {
-            RulesSourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Avalonia.ClientGUI", "rules.json"),
-            ListingsSourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Avalonia.ClientGUI", "listings.json"),
+            RulesSourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Avalonia.JLAClient", "rules.json"),
+            ListingsSourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Avalonia.JLAClient", "listings.json"),
             AutosaveFrequencyInMilliseconds = 900000,
             QueueName = "scratchjobs_queue",
             Username = "guest",

@@ -10,6 +10,8 @@ using JLAClient.Models;
 using System.Threading.Tasks;
 using System;
 using System.Threading;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace JLAClient;
 
@@ -21,6 +23,8 @@ public partial class App : Application
     }
     //reference to main view model.
     private readonly MainWindowViewModel _mainViewModel = new();
+    private readonly ListObjectsFileService<DisplayableJobListing> _listingsFileService = new();
+    private readonly ListObjectsFileService<ScheduleRule> _rulesFileService = new();
 
     public override async void OnFrameworkInitializationCompleted()
     {
@@ -37,23 +41,21 @@ public partial class App : Application
         }
         //Acquire Configuration from file
         JLAClientConfiguration configuration = await ConfigurationFileService.RetrieveStartupConfiguration();
-        //Instantiate my services for my objects
-        ListObjectsFileService<DisplayableJobListing> listingsFileService = new();
-        listingsFileService.SetFilePath(configuration.ListingsSourcePath);
-        ListObjectsFileService<ScheduleRule> rulesFileService = new();
-        rulesFileService.SetFilePath(configuration.RulesSourcePath);
+        //Instantiate my filepaths for my services
+        _listingsFileService.SetFilePath(configuration.ListingsSourcePath);
+        _rulesFileService.SetFilePath(configuration.RulesSourcePath);
         // get the listings to load
-        var listingsLoaded = await listingsFileService.LoadFromFileAsync();
+        var listingsLoaded = await _listingsFileService.LoadFromFileAsync();
 
         if (listingsLoaded is not null)
         {
             _mainViewModel.AppendListings(listingsLoaded);
         }
         //Get effective last save time (before it's overwritten) for passing to RabbitMQ service initialization
-        DateTime? lastTimeListingsSaved = listingsFileService.GetLastTimeListingsSavedToFile();
+        DateTime? lastTimeListingsSaved = _listingsFileService.GetLastTimeListingsSavedToFile();
         //get existing automatic update rules
-        var scheduledRules = await rulesFileService.LoadFromFileAsync() ?? null;
-        if(scheduledRules is not null)
+        var scheduledRules = await _rulesFileService.LoadFromFileAsync() ?? null;
+        if (scheduledRules is not null)
         {
             _mainViewModel.AppendRules(scheduledRules);
         }
@@ -95,7 +97,10 @@ public partial class App : Application
     }
     private async Task SaveToFile()
     {
-        //A call to the listings and rules services goes here, as well as a pull from the mainviewmodel
+        var listingsToSave = _mainViewModel.Listings.Select(listing => listing.GetDisplayableJobListing());
+        var rulesToSave = _mainViewModel.Rules.Select(rule => rule.GetScheduleRule());
+        await _listingsFileService.SaveToFileAsync(listingsToSave);
+        await _rulesFileService.SaveToFileAsync(rulesToSave);
     }
 
     private async Task RecurringSaveToFile(TimeSpan interval, CancellationToken cancellationToken = default)

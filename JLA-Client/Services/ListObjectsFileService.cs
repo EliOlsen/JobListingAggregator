@@ -21,8 +21,7 @@ public class ListObjectsFileService<T>()
     {
         if (filePath is null) return;
         // Ensure all directories exists
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
         // We use a FileStream to write all listings to disc
         using var fs = File.Create(filePath);
         await JsonSerializer.SerializeAsync(fs, listToSave);
