@@ -60,7 +60,7 @@ public partial class App : Application
         //Initial periodic item save in case of computer crash
         _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));
         //Initialize the RabbitMQ system and pass it the rules so it knows what to automatically send out
-        //TODO: Above line
+        await MyRabbitMQ.Initialize(_mainViewModel.AppendListings, scheduledRules, lastTimeListingsSaved, configuration);
         //Done with initialization
         base.OnFrameworkInitializationCompleted();
     }
