@@ -35,7 +35,7 @@ public partial class App : Application
             DisableAvaloniaDataAnnotationValidation();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = _mainViewModel,
             };
             desktop.ShutdownRequested += DesktopOnShutdownRequested;
         }
@@ -46,7 +46,6 @@ public partial class App : Application
         _rulesFileService.SetFilePath(configuration.RulesSourcePath);
         // get the listings to load
         var listingsLoaded = await _listingsFileService.LoadFromFileAsync();
-
         if (listingsLoaded is not null)
         {
             _mainViewModel.AppendListings(listingsLoaded);
