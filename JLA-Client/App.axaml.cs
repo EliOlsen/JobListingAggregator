@@ -4,14 +4,14 @@ using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using JLAClient.ViewModels;
-using JLA_Client.Views;
+using JLAClient.Views;
 using JLAClient.Services;
 using JLAClient.Models;
 using System.Threading.Tasks;
 using System;
 using System.Threading;
 
-namespace JLA_Client;
+namespace JLAClient;
 
 public partial class App : Application
 {

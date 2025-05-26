@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 
-namespace JLA_Client;
+namespace JLAClient;
 
 sealed class Program
 {
