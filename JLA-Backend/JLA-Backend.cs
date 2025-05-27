@@ -31,7 +31,7 @@ public class JLABackend
         HttpClient client = new();
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
-        //client.DefaultRequestHeaders.Add("User-Agent", "??"); //Haven't decided exactly how I'm formatting this yet.
+        client.DefaultRequestHeaders.Add("User-Agent", settings.UserAgent); //Haven't decided exactly how I'm formatting this yet.
         //HttpClient information handled. Now to set the variables that won't be changing depending on received data.
 
         //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
@@ -100,7 +100,7 @@ public class JLABackend
                     {Jobsite.BuiltIn, $"https://builtin.com/jobs/remote/hybrid/office/{request.BuiltInJobCategory}/entry-level?search={request.SearchTerms.Replace(" ", "%20")}&daysSinceUpdated=1&city={request.City.Replace(" ", "%20")}&state={request.State.Replace(" ", "%20")}&country={regionInfo.ThreeLetterISORegionName}"},
                     {Jobsite.Dice, $"https://www.dice.com/platform/jobs?filters.postedDate=ONE&filters.employmentType=FULLTIME&filters.employerType=Direct+Hire&filters.workplaceTypes=Remote%7COn-Site%7CHybrid&radius={request.Radius}&countryCode={regionInfo.TwoLetterISORegionName}&latitude={request.Latitude}&location={request.City.Replace(" ", "+")}%2C+{request.StateAbbrev}%2C+{regionInfo.ThreeLetterISORegionName}&locationPrecision=City&longitude={request.Longitude}&q={request.SearchTerms.Replace(" ", "+")}&radiusUnit=mi"},
                     {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
-                    {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.State.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,11_IC1142551_KO12,29.htm?fromAge=1&maxSalary={request.MaxSalary}&minSalary={request.MinSalary}"}
+                    {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.City.ToLower().Replace(" ", "-")}-{request.StateAbbrev.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,14_IC1142551_KO15,33.htm?maxSalary={request.MaxSalary}&minSalary={request.MinSalary}&fromAge=7"}
                 };
                 List<GenericJobListing> listings = [];
                 //Then switch!
@@ -108,7 +108,7 @@ public class JLABackend
                 {
                     case Jobsite.Error:
                         //error - send nothing
-                        FormattedConsoleOuptut.Warning("Request Jobsite enum does not parse. Returning empty list.");
+                        FormattedConsoleOutput.Warning("Request Jobsite enum does not parse. Returning empty list.");
                         response = JsonSerializer.Serialize(new List<GenericJobListing>());
                         break;
 
@@ -143,7 +143,7 @@ public class JLABackend
             }
             catch (Exception e)
             {
-                FormattedConsoleOuptut.Warning(e.Message);
+                FormattedConsoleOutput.Warning("Error in the main switch: " + e);
                 response = string.Empty; //This is already the default, but the try block may have altered it before hitting an exception so we'll set it here.
             }
             finally
@@ -159,7 +159,7 @@ public class JLABackend
         Console.WriteLine(" Press [enter] to exit.");
         Console.ReadLine();
     }
-    static Task<List<GenericJobListing>> Placeholder(HttpClient client, Jobsite jobsite, Dictionary<Jobsite, string> urlDictionary, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
+    static Task<List<GenericJobListing>> Placeholder(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         return Task.FromResult(new List<GenericJobListing> { });
     }
@@ -184,7 +184,7 @@ public class JLABackend
         //Ensure that passed parameters are usable, before doing anything else.
         if (!parseApproachDictionary.ContainsKey("master"))
         {
-            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings was not passed a master parseApproach and cannot process. Returning empty list.");
+            FormattedConsoleOutput.Warning("PollAndParseJobsiteForListings was not passed a master parseApproach and cannot process. Returning empty list.");
             return [];
         }
         //First step, which is to actually call the URL
@@ -194,13 +194,13 @@ public class JLABackend
         for (int i = 0; i < parseApproachDictionary["master"].Count; i++)
         {
             ParseApproach currentApproach = parseApproachDictionary["master"][i];
-            brokenUpListings = StringMunging.BreakStringIntoStringsOnStartAndEndSubstrings(rawHTML, currentApproach.PreSubstring, currentApproach.PostSubstring);
+            brokenUpListings = StringMunging.BreakStringIntoStringsOnStartAndEndSubstrings(rawHTML, currentApproach.PreSubstring, currentApproach.PostSubstring, currentApproach.KeepPreSubstring, currentApproach.KeepPostSubstring);
             if (brokenUpListings.Count > 0) break;
         }
         //if, having gone through the entire list, we still have nothing? toss out a warning and return empty list.
         if (brokenUpListings.Count < 1)
         {
-            FormattedConsoleOuptut.Warning("PollAndParseJobsiteForListings found no listings. Returning empty list.");
+            FormattedConsoleOutput.Warning("PollAndParseJobsiteForListings found no listings. Returning empty list.");
             return [];
         }
         //Here is where we know we're going to return SOMETHING.
@@ -209,17 +209,19 @@ public class JLABackend
         {
             //Third step, get the individual values
             string fallback = "ERROR";
+            string fallbackId = "ERROR" + new Random().Next(0, 9999999); //Because I don't want id errors to register as the same error and then get discarded by frontend
             GenericJobListing job = new() //If I cannot parse one of these, I want the fallback value to display as error in client - better for me when using, so I can easily spot problems
             {
                 Title = TryParseList(listing, "Title", fallback, parseApproachDictionary),
                 Company = TryParseList(listing, "Company", fallback, parseApproachDictionary),
-                JobsiteId = TryParseList(listing, "JobsiteId", fallback, parseApproachDictionary),
+                JobsiteId = jobsite.ToString() + TryParseList(listing, "JobsiteId", fallbackId, parseApproachDictionary),
                 Location = TryParseList(listing, "Location", fallback, parseApproachDictionary),
                 PostDateTime = TryParseList(listing, "PostDateTime", fallback, parseApproachDictionary),
                 LinkToJobListing = TryParseList(listing, "LinkToJobListing", fallback, parseApproachDictionary),
             };
             //Fourth step, filter listing based on request specifications beyond what is in the URL
             DateTime theoreticalJobPostTime = PostDateTimeEstimateFromVagueString(job.PostDateTime);
+            job.PostDateTime = theoreticalJobPostTime.ToString();//Doing this in line was, honestly, a bunch of unnecessary conversions
             TimeSpan gracePeriod = new(1, 0, 0);// In an ideal world this would be 0, but right now I want it high to I trend toward seeing mistakes, not missing mistakes.
             if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms)
             && Array.IndexOf(request.CompanyFilterTerms, job.Company) == -1
@@ -240,17 +242,8 @@ public class JLABackend
         int numberOfPages = int.Parse(numPagesString);
         for (int i = 1; i <= numberOfPages; i++)
         {
-            string rawHTML;
-            if (i == 1)
-            {
-                rawHTML = rawHTMLPageOne;
-            }
-            else
-            {
-                string currentURL = url + $"&page={i}";
-                rawHTML = await client.GetStringAsync(currentURL);
-            }
-            output.AddRange(await PollAndParseJobSiteForListings(client, jobsite, rawHTML, parseApproachDictionary, request));
+            string currentURL = url + $"&page={i}";
+            output.AddRange(await PollAndParseJobSiteForListings(client, jobsite, currentURL, parseApproachDictionary, request));
             //Spacer to avoid spamming Dice with 10+ requests all at once - don't know if this is necessary, but it fits the design philosophy
             if (i != numberOfPages) Thread.Sleep(new TimeSpan(0, 0, rnd.Next(1, 5)));
         }
@@ -270,14 +263,16 @@ public class JLABackend
             output = StringMunging.TryGetSubString(input, currentApproach.PreSubstring, currentApproach.PostSubstring, currentApproach.KeepPreSubstring, currentApproach.KeepPostSubstring);
             if (output != string.Empty) break;
         }
+        if (output == string.Empty) FormattedConsoleOutput.Warning("All parse approaches failed for " + propertyName);
+        output = Uri.UnescapeDataString(output); //Some of the sites use URI encoding for some reason; I'm getting rid of that here.
         return output != string.Empty ? output : fallback;
     }
     private static DateTime PostDateTimeEstimateFromVagueString(string postDateTime)
     {//Different sites have different formats, and absolutely none of them are very specific. This logic matches them as accurately as the lowest common denominator allows.
         int hoursAgo = 0;
         int minutesAgo = 0;
-        if (postDateTime.Contains("hour", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = int.Parse(postDateTime.Split(" ")[0]);
-        else if (postDateTime.Contains("minute", StringComparison.CurrentCultureIgnoreCase)) minutesAgo = int.Parse(postDateTime.Split(" ")[0]);
+        if (postDateTime.Contains("hour", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 1;
+        else if (postDateTime.Contains("minute", StringComparison.CurrentCultureIgnoreCase)) minutesAgo = 1;
         else if (postDateTime.Contains("today", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 0;
         else if (postDateTime.Contains("day", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24;
         else if (postDateTime.Contains("week", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7;
