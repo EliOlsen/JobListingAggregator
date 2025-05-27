@@ -6,16 +6,18 @@ public class DefaultParserApproach
     {
         return new Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>
                 {
-                    {Jobsite.LinkedIn, new Dictionary<string, List<ParseApproach>>
+                    {Jobsite.Glassdoor, new()},
+                    {Jobsite.Indeed, new()},
+                    { Jobsite.LinkedIn, new Dictionary<string, List<ParseApproach>>
                         {
                             {"master", new List<ParseApproach>
                                 {
                                     new ParseApproach
                                     {
-                                        PreSubstring = "base-card relative w-full hover:no-underline focus:no-underline base-card--link base-search-card base-search-card--link job-search-card",
+                                        PreSubstring = "base-search-card base-search-card--link job-search-card",
                                         PostSubstring = "</time>",
                                         KeepPreSubstring = false,
-                                        KeepPostSubstring = false,
+                                        KeepPostSubstring = true,
                                     }
                                 }
                             },
