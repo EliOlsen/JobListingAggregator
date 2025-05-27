@@ -15,7 +15,7 @@ public class UserJsonConfiguration<T>
         if (!File.Exists(configFilePath))
         {
             //If file does not exist, make a default one and close program with error message
-            FormattedConsoleOuptut.Error("Error: configuration file not found. Generating default file at " + configFilePath + " and exiting program. Please edit config file to reflect desired configuration.");
+            FormattedConsoleOutput.Error("Error: configuration file not found. Generating default file at " + configFilePath + " and exiting program. Please edit config file to reflect desired configuration.");
             using (var fs = File.Create(configFilePath))
             {
                 //serialize default configuration object into file for user to edit (set up inside a dictionary like so for proper format used when retrieving later)
@@ -32,14 +32,14 @@ public class UserJsonConfiguration<T>
         }
         catch (InvalidOperationException e) //The file may exist, but it's always possible it's not formatted properly
         {
-            FormattedConsoleOuptut.Error("configuration file improperly formatted. Specifically: " + e.ToString());
+            FormattedConsoleOutput.Error("configuration file improperly formatted. Specifically: " + e.ToString());
             System.Environment.Exit(1);
         }
         //Just in case, let's ensure settings is always non-null and toss a warning if it wasn't somehow
         if (settings is null)
         {
             settings = defaultConfiguration;
-            FormattedConsoleOuptut.Warning("Configuration file invalid; default configuration file in effect.");
+            FormattedConsoleOutput.Warning("Configuration file invalid; default configuration file in effect.");
         }
         //In the case where the user specifically did not provide one of the required values, this individual value defaults to a null.
         //I want to replace nulls with the default values and throw a warning if so.
@@ -48,7 +48,7 @@ public class UserJsonConfiguration<T>
             if (property.GetValue(settings) is null)
             {
                 property.SetValue(settings, property.GetValue(defaultConfiguration));
-                FormattedConsoleOuptut.Warning("Configuration file property invalid; default configuration file value for " + property.Name + " in effect.");
+                FormattedConsoleOutput.Warning("Configuration file property invalid; default configuration file value for " + property.Name + " in effect.");
             }
         }
         return settings;
