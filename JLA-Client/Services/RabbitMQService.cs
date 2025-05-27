@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JLAClient.Models;
+using JLALibrary;
 using JLALibrary.Models;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -149,7 +150,15 @@ public class MyRabbitMQ
         await rabbitMQService.LogAsync("Client.info", "Request made by Client for data from source: " + n, id, logExchangeName);
         var response = await rabbitMQService.CallAsync(n, queueName);
         await rabbitMQService.LogAsync("Client.info", "Response received by Client for data from source: " + n, id, logExchangeName);
-        List<GenericJobListing> incomingJobList = JsonSerializer.Deserialize<List<GenericJobListing>>(response) ?? [];
+        List<GenericJobListing> incomingJobList = [];
+        try
+        {
+            incomingJobList = JsonSerializer.Deserialize<List<GenericJobListing>>(response) ?? [];
+        }
+        catch(Exception e)
+        {
+            FormattedConsoleOutput.Warning("JsonSerializer failed to deserialize incoming response. Error message: " + e);
+        }
         List<DisplayableJobListing> jobListings = [];
         foreach(GenericJobListing listing in incomingJobList){
             jobListings.Add(new DisplayableJobListing{
