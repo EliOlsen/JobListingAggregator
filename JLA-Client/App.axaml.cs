@@ -10,8 +10,6 @@ using JLAClient.Models;
 using System.Threading.Tasks;
 using System;
 using System.Threading;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace JLAClient;
 
@@ -48,7 +46,7 @@ public partial class App : Application
         var listingsLoaded = await _listingsFileService.LoadFromFileAsync();
         if (listingsLoaded is not null)
         {
-            _mainViewModel.AppendListings(listingsLoaded);
+            _mainViewModel.AppendListings(listingsLoaded, false);
         }
         //Get effective last save time (before it's overwritten) for passing to RabbitMQ service initialization
         DateTime? lastTimeListingsSaved = _listingsFileService.GetLastTimeListingsSavedToFile();
@@ -56,7 +54,7 @@ public partial class App : Application
         var scheduledRules = await _rulesFileService.LoadFromFileAsync() ?? null;
         if (scheduledRules is not null)
         {
-            _mainViewModel.AppendRules(scheduledRules);
+            _mainViewModel.AppendRules(scheduledRules, false);
         }
         //Initial periodic item save in case of computer crash
         _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));

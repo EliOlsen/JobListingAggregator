@@ -115,7 +115,7 @@ public class RabbitMQService : IAsyncDisposable
 public class MyRabbitMQ
 {   
     //Main function
-    public static async Task Initialize(Func<List<DisplayableJobListing>, bool> ProcessingFunction, IEnumerable<ScheduleRule>? rules, DateTime? lastTimeListingsSaved, JLAClientConfiguration configuration)
+    public static async Task Initialize(Func<List<DisplayableJobListing>, bool, bool> ProcessingFunction, IEnumerable<ScheduleRule>? rules, DateTime? lastTimeListingsSaved, JLAClientConfiguration configuration)
     {
         string instanceId = Guid.NewGuid().ToString();
         //Set up rabbitMQService so I can use it when needed (moved from InvokeAsync so it only happens once)
@@ -145,7 +145,7 @@ public class MyRabbitMQ
             }
         }
     }
-    private static async void InvokeAsync(RabbitMQService rabbitMQService, string n, string id, Func<List<DisplayableJobListing>, bool> ProcessingFunction, string logExchangeName, string queueName)
+    private static async void InvokeAsync(RabbitMQService rabbitMQService, string n, string id, Func<List<DisplayableJobListing>, bool, bool> ProcessingFunction, string logExchangeName, string queueName)
     {
         await rabbitMQService.LogAsync("Client.info", "Request made by Client for data from source: " + n, id, logExchangeName);
         var response = await rabbitMQService.CallAsync(n, queueName);
@@ -167,11 +167,11 @@ public class MyRabbitMQ
             });
         }
         //Finally, get them into the actual main window using the passed function
-        ProcessingFunction(jobListings);
+        ProcessingFunction(jobListings, true);
     }
 
     //This is the wrapper function that periodically, per interval, makes the scheduled call and passes the data along
-    private static async Task PeriodicAsyncScheduledCall(RabbitMQService rabbitMQService, TimeSpan interval, string id, Func<List<DisplayableJobListing>, bool> ProcessingFunction, string logExchangeName, string queueName, ScheduleRule scheduleRule, CancellationToken cancellationToken = default)
+    private static async Task PeriodicAsyncScheduledCall(RabbitMQService rabbitMQService, TimeSpan interval, string id, Func<List<DisplayableJobListing>, bool, bool> ProcessingFunction, string logExchangeName, string queueName, ScheduleRule scheduleRule, CancellationToken cancellationToken = default)
     {
     using PeriodicTimer timer = new(interval);
     while (true)
@@ -181,7 +181,7 @@ public class MyRabbitMQ
     }
     }
     //This is the function that evaluates whether a call is taking place within requested hours, and if so, invokes the main call with the necessary data
-    private static void ScheduledCall(RabbitMQService rabbitMQService, string id, Func<List<DisplayableJobListing>, bool> ProcessingFunction, string logExchangeName, string queueName, ScheduleRule scheduleRule)
+    private static void ScheduledCall(RabbitMQService rabbitMQService, string id, Func<List<DisplayableJobListing>, bool, bool> ProcessingFunction, string logExchangeName, string queueName, ScheduleRule scheduleRule)
     {
         if (DateTime.Now >= DateTime.Now.Date.Add(scheduleRule.DailyStartTime) && DateTime.Now <= DateTime.Now.Date.Add(scheduleRule.DailyEndTime))
         {

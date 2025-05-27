@@ -48,14 +48,15 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Appends all DisplayableJobListings of a list that are not already in Listings
     /// </summary>
     /// <param name="newListings">the DisplayableJobListings to append if unique</param>
-    public bool AppendListings(IEnumerable<DisplayableJobListing> newListings)
+    public bool AppendListings(IEnumerable<DisplayableJobListing> newListings, bool PushToFront)
     {
         foreach (DisplayableJobListing displayableListing in newListings)
         {   //Check that our listing id is not null, and that a listing with that id is not already present
             var firstOrDefaultListing = Listings.FirstOrDefault(a => a.GetDisplayableJobListing().Listing.JobsiteId == displayableListing.Listing.JobsiteId) ?? null;
             if (displayableListing.Listing.JobsiteId is not null && firstOrDefaultListing is null)
             {
-                Listings.Insert(0, new ListingViewModel(displayableListing));
+                if (PushToFront) Listings.Insert(0, new ListingViewModel(displayableListing));
+                else Listings.Add(new ListingViewModel(displayableListing));
             }
         }
         return true;
@@ -101,14 +102,15 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Appends all ScheduleRules of a list that are not already in Rules
     /// </summary>
     /// <param name="newRules">the ScheduleRules to append if unique</param>
-    public bool AppendRules(IEnumerable<ScheduleRule> newRules)
+    public bool AppendRules(IEnumerable<ScheduleRule> newRules, bool PushToFront)
     {
         foreach (ScheduleRule scheduleRule in newRules)
         {   //Check that our rule name is not null, and that a rule with that name is not already present
             var firstOrDefaultRule = Rules.FirstOrDefault(a => a.GetScheduleRule().Name == scheduleRule.Name) ?? null;
             if (scheduleRule.Name is not null && firstOrDefaultRule is null)
             {
-                Rules.Insert(0, new RuleViewModel(scheduleRule));
+                if (PushToFront) Rules.Insert(0, new RuleViewModel(scheduleRule));
+                else Rules.Add(new RuleViewModel(scheduleRule));
             }
         }
         return true;
