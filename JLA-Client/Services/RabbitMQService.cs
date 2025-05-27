@@ -127,6 +127,7 @@ public class MyRabbitMQ
                 if(rule.Interval != 0)
                 {
                     //This is a rule meant to run on a periodic basis, so set that up
+                    rule.RequestSpecifications.CutoffTime = DateTime.Now.Subtract(new TimeSpan(0, 0, rule.Interval)); //Because this should be a relative time.
                     _ = Task.Run(() => PeriodicAsyncScheduledCall(//Do not await; doing so ensures that only the first rule will be implemented
                     rabbitMQService, 
                     new TimeSpan(0,0,rule.Interval),
@@ -139,7 +140,7 @@ public class MyRabbitMQ
                 else
                 {
                     //This is a rule meant to only run on startup, so skip the async and just call it
-                    rule.RequestSpecifications.CutoffTime = lastTimeListingsSaved ?? rule.RequestSpecifications.CutoffTime; //if we've got a last time saved, let's only request back to then
+                    rule.RequestSpecifications.CutoffTime = lastTimeListingsSaved ?? DateTime.Now.Subtract(new TimeSpan(1,0,0)); //if we've got a last time saved, let's only request back to then
                     InvokeAsync(rabbitMQService, JsonSerializer.Serialize(rule.RequestSpecifications), instanceId, ProcessingFunction, configuration.LogExchangeName, configuration.QueueName);
                 }
             }
