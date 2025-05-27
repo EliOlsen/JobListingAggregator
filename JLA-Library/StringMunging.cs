@@ -11,7 +11,7 @@ public static class StringMunging
         if (input.Length == 0 || preSubstring.Length == 0 || postSubstring.Length == 0 || preSubstring.Length + postSubstring.Length >= input.Length)
         {
             //then we've been passed an invalid set of variables.
-            FormattedConsoleOuptut.Warning("Invalid variables passed to TryGetSubstring");
+            FormattedConsoleOutput.Warning("Invalid variables passed to TryGetSubstring");
             return string.Empty;
         }
         int cutOneIndex = input.IndexOf(preSubstring); //grab our start index
@@ -35,18 +35,18 @@ public static class StringMunging
         }
         catch (Exception e)
         {
-            FormattedConsoleOuptut.Warning("Invalid calculation in TryGetSubstring: " + e);
+            FormattedConsoleOutput.Warning("Invalid calculation in TryGetSubstring: " + e);
             return string.Empty;
         }
     }
 
-    public static List<string> BreakStringIntoStringsOnStartAndEndSubstrings(string input, string startString, string endString)
+    public static List<string> BreakStringIntoStringsOnStartAndEndSubstrings(string input, string startString, string endString, bool keepStartString, bool keepEndString)
     {
         string[] intermediate;
         List<string> output = [];
         if (startString.Length < 1 || endString.Length < 1 || input.Length < (startString.Length + endString.Length))
         {
-            FormattedConsoleOuptut.Warning("Invalid variables passed to BreakStringIntoStringsOnStartAndEndSubstrings");
+            FormattedConsoleOutput.Warning("Invalid variables passed to BreakStringIntoStringsOnStartAndEndSubstrings");
             return output;
         }
         intermediate = input.Split(startString);
@@ -60,7 +60,7 @@ public static class StringMunging
             string[] bits = chunk.Split(endString);
             if (bits.Length > 1)
             {
-                output.Add(bits[0]);
+                output.Add((keepStartString ? startString : "") + bits[0] + (keepEndString ? endString : ""));
             }
         }
         return output;
