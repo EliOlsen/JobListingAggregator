@@ -65,7 +65,8 @@ public partial class MainWindowViewModel : ViewModelBase
         return true;
     }
 
-
+    [ObservableProperty]
+    public bool _isRuleEditorExpanded;
 
     /// <summary>
     /// Gets a collection of <see cref="ScheduleRule"/> which allows adding and removing scheduled rules
@@ -315,8 +316,9 @@ public partial class MainWindowViewModel : ViewModelBase
         NewRuleMaxSalary = rule.RequestSpecifications!.MaxSalary;
         NewRuleMinSalary = rule.RequestSpecifications!.MinSalary;
         NewRuleJobCategory = rule.RequestSpecifications!.BuiltInJobCategory;
-        NewRuleCompanyFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.CompanyFilterTerms, typeof(string), null, CultureInfo.CurrentCulture)??"";
-        NewRuleTitleFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.TitleFilterTerms, typeof(string), null, CultureInfo.CurrentCulture)??"";
+        NewRuleCompanyFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.CompanyFilterTerms, typeof(string), null, CultureInfo.CurrentCulture) ?? "";
+        NewRuleTitleFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.TitleFilterTerms, typeof(string), null, CultureInfo.CurrentCulture) ?? "";
+        IsRuleEditorExpanded = true;
     }
     /// <summary>
     /// This command is used to clear the form of all values

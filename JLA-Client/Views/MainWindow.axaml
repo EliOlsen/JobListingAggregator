@@ -158,95 +158,100 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <StackPanel Orientation="Vertical" Grid.Row = "2">
-                    <TextBox
-                        Text = "{Binding NewRuleName}"
-                        Watermark = "Name">
-                    </TextBox>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Interval (in seconds): "/>
-                        <NumericUpDown Value="{Binding NewRuleInterval}" Increment="1" FormatString="0" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
+                <Expander VerticalAlignment="Bottom" Grid.Row="2" IsExpanded="{Binding IsRuleEditorExpanded}">
+                    <Expander.Header>
+                        Add / Update Rules
+                    </Expander.Header>
+                        <StackPanel Orientation="Vertical">
+                        <TextBox
+                            Text = "{Binding NewRuleName}"
+                            Watermark = "Name">
+                        </TextBox>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Interval (in seconds): "/>
+                            <NumericUpDown Value="{Binding NewRuleInterval}" Increment="1" FormatString="0" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Daily Start Time: "/>
+                            <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyStartTime}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Daily End Time:   "/>
+                            <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyEndTime}"/>
+                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding AcceptedSources}" SelectedValue="{Binding NewRuleSource}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <CheckBox Content="Is Remote"
+                            IsChecked="{Binding NewRuleIsRemote}" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Radius (in miles): "/>
+                            <NumericUpDown Value="{Binding NewRuleRadius}" Increment="1" FormatString="0" Minimum="1" AllowSpin="false" ShowButtonSpinner="false"/>
+                        </StackPanel>
+                        <TextBox
+                            Text = "{Binding NewRuleSearchTerms}"
+                            Watermark = "Search Terms">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleCulture}"
+                            Watermark = "Cultural Info specififer (eg 'en-US')">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleCity}"
+                            Watermark = "City">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleState}"
+                            Watermark = "State">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleStateAbbrev}"
+                            Watermark = "State Abbreviation">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleLongitudeString}"
+                            Watermark = "Longitude">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleLatitudeString}"
+                            Watermark = "Latitude">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleGeoId}"
+                            Watermark = "GeoId">
+                        </TextBox>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Minimum Salary: "/>
+                            <NumericUpDown Value="{Binding NewRuleMinSalary}" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Maximum Salary: "/>
+                            <NumericUpDown Value="{Binding NewRuleMaxSalary}" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
+                        </StackPanel>
+                        <TextBox
+                            Text = "{Binding NewRuleJobCategory}"
+                            Watermark = "BuiltIn Job Category">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleTitleFilterArrayString}"
+                            Watermark = "Job Title Keyword Filters">
+                        </TextBox>
+                        <TextBox
+                            Text = "{Binding NewRuleCompanyFilterArrayString}"
+                            Watermark = "Job Company Filters">
+                        </TextBox>
+                        <Button Command="{Binding AddOrUpdateRuleCommand}" >
+                            Add / Update
+                        </Button>
+                        <Button Command="{Binding ClearFormCommand}" >
+                            Clear
+                        </Button>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Daily Start Time: "/>
-                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyStartTime}"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Daily End Time:   "/>
-                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyEndTime}"/>
-                    </StackPanel>
-                    <ComboBox ItemsSource="{Binding AcceptedSources}" SelectedValue="{Binding NewRuleSource}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                    <CheckBox Content="Is Remote"
-                        IsChecked="{Binding NewRuleIsRemote}" />
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Radius (in miles): "/>
-                        <NumericUpDown Value="{Binding NewRuleRadius}" Increment="1" FormatString="0" Minimum="1" AllowSpin="false" ShowButtonSpinner="false"/>
-                    </StackPanel>
-                    <TextBox
-                        Text = "{Binding NewRuleSearchTerms}"
-                        Watermark = "Search Terms">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleCulture}"
-                        Watermark = "Cultural Info specififer (eg 'en-US')">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleCity}"
-                        Watermark = "City">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleState}"
-                        Watermark = "State">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleStateAbbrev}"
-                        Watermark = "State Abbreviation">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleLongitudeString}"
-                        Watermark = "Longitude">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleLatitudeString}"
-                        Watermark = "Latitude">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleGeoId}"
-                        Watermark = "GeoId">
-                    </TextBox>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Minimum Salary: "/>
-                        <NumericUpDown Value="{Binding NewRuleMinSalary}" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Maximum Salary: "/>
-                        <NumericUpDown Value="{Binding NewRuleMaxSalary}" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
-                    </StackPanel>
-                    <TextBox
-                        Text = "{Binding NewRuleJobCategory}"
-                        Watermark = "BuiltIn Job Category">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleTitleFilterArrayString}"
-                        Watermark = "Job Title Keyword Filters">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleCompanyFilterArrayString}"
-                        Watermark = "Job Company Filters">
-                    </TextBox>
-                    <Button Command="{Binding AddOrUpdateRuleCommand}" >
-                        Add / Update
-                    </Button>
-                    <Button Command="{Binding ClearFormCommand}" >
-                        Clear
-                    </Button>
-                </StackPanel>
+                </Expander>
             </Grid>
         </TabItem>
     </TabControl>
