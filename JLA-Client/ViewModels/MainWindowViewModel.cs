@@ -6,6 +6,7 @@ using System.Linq;
 using System;
 using JLAClient.Models;
 using System.Globalization;
+using Microsoft.VisualBasic;
 
 namespace JLAClient.ViewModels;
 
@@ -246,7 +247,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// This command is used to add a new Rule to the List
     /// </summary>
-    [RelayCommand (CanExecute = nameof(CanAddRule))]
+    [RelayCommand(CanExecute = nameof(CanAddRule))]
     private void AddRule()
     {
         // Add a new item to the list
@@ -254,8 +255,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Name = NewRuleName,
             Interval = decimal.ToInt32(NewRuleInterval ?? decimal.Zero),
-            DailyStartTime = NewRuleDailyStartTime?? TimeSpan.Zero,
-            DailyEndTime = NewRuleDailyEndTime?? TimeSpan.Zero,
+            DailyStartTime = NewRuleDailyStartTime ?? TimeSpan.Zero,
+            DailyEndTime = NewRuleDailyEndTime ?? TimeSpan.Zero,
             RequestSpecifications = new()
             {
                 Source = NewRuleSource!,
@@ -273,14 +274,34 @@ public partial class MainWindowViewModel : ViewModelBase
                 MaxSalary = decimal.ToInt32(NewRuleMaxSalary ?? decimal.Zero),
                 MinSalary = decimal.ToInt32(NewRuleMinSalary ?? decimal.Zero),
                 BuiltInJobCategory = NewRuleJobCategory!,
-                CompanyFilterTerms = NewRuleCompanyFilterArrayString!.Split("||"),
-                TitleFilterTerms = NewRuleTitleFilterArrayString!.Split("||")
+                CompanyFilterTerms = NewRuleCompanyFilterArrayString is not null ? NewRuleCompanyFilterArrayString!.Split("||") : [],
+                TitleFilterTerms = NewRuleTitleFilterArrayString is not null ? NewRuleTitleFilterArrayString.Split("||") : []
             }
-            
+
         });
 
-        // reset the NewRuleName
+        // reset the fields
         NewRuleName = null;
+        NewRuleInterval = null;
+        NewRuleDailyEndTime = null;
+        NewRuleDailyStartTime = null;
+        NewRuleSource = null;
+        NewRuleRadius = null;
+        NewRuleSearchTerms = null;
+        NewRuleCulture = null;
+        NewRuleIsRemote = false;
+        NewRuleCity = null;
+        NewRuleState = null;
+        NewRuleStateAbbrev = null;
+        NewRuleLongitudeString = null;
+        NewRuleLatitudeString = null;
+        NewRuleGeoId = null;
+        NewRuleMaxSalary = null;
+        NewRuleMinSalary = null;
+        NewRuleJobCategory = null;
+        NewRuleCompanyFilterArrayString = null;
+        NewRuleTitleFilterArrayString = null;
+
     }
 
 
