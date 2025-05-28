@@ -235,8 +235,8 @@
                         Text = "{Binding NewRuleCompanyFilterArrayString}"
                         Watermark = "Job Company Filters">
                     </TextBox>
-                    <Button Command="{Binding AddRuleCommand}" >
-                        Add
+                    <Button Command="{Binding AddOrUpdateRuleCommand}" >
+                        Add / Update
                     </Button>
                 </StackPanel>
             </Grid>

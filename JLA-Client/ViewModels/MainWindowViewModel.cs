@@ -75,31 +75,31 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets or set the name for a new rule. If this string is not empty and unique, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleName;
     /// <summary>
     /// Gets or set the interval in seconds for a new rule. If this decimal is not null and positive, the AddRuleCommand will be enabled automatically (with rounding)
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private decimal? _newRuleInterval;
     // <summary>
     /// Gets or set the daily start time for a new rule. If this TimeSpan is not null, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private TimeSpan? _newRuleDailyStartTime;
     // <summary>
     /// Gets or set the daily end time for a new rule. If this TimeSpan is not null, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private TimeSpan? _newRuleDailyEndTime;
     /// <summary>
     /// Gets or set the jobsite source for a new rule. If this string equals one of the accepted values, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private string? _newRuleSource;
     /// <summary>
     /// Hardcoded list of acceptable source strings, for use in the dropdown.
@@ -110,7 +110,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets or set the radius for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private decimal? _newRuleRadius;
     // <summary>
     /// Gets or set the isRemote bool for the new rule.
@@ -121,67 +121,67 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets or set the search terms for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleSearchTerms;
     /// <summary>
     /// Gets or set the cultural string for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleCulture;
     /// <summary>
     /// Gets or set the city for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleCity;
     /// <summary>
     /// Gets or set the State for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleState;
     /// <summary>
     /// Gets or set the State Abbreviation for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleStateAbbrev;
     /// <summary>
     /// Gets or set the Longitude for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleLongitudeString;
     /// <summary>
     /// Gets or set the Latitude for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleLatitudeString;
     /// <summary>
     /// Gets or set the LinkedIn GeoId for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleGeoId;
     /// <summary>
     /// Gets or set the min salary for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private decimal? _newRuleMinSalary;
     /// <summary>
     /// Gets or set the max salary for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private decimal? _newRuleMaxSalary;
     /// <summary>
     /// Gets or set the BuiltIn Job Category for a new rule.
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleJobCategory;
     /// <summary>
     /// Gets or set the company filter array for a new rule.
@@ -198,12 +198,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Returns if a new Rule can be added. There are (many) validation requirements to check
     /// </summary>
-    private bool CanAddRule()
+    private bool CanAddOrUpdateRule()
     {
         return
         //Name validation
         !string.IsNullOrWhiteSpace(NewRuleName)
-        && !Rules.Where(x => x.Name == NewRuleName).Any()
         //Interval validation
         && NewRuleInterval is not null
         && NewRuleInterval >= 0
@@ -247,11 +246,10 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// This command is used to add a new Rule to the List
     /// </summary>
-    [RelayCommand(CanExecute = nameof(CanAddRule))]
-    private void AddRule()
+    [RelayCommand(CanExecute = nameof(CanAddOrUpdateRule))]
+    private void AddOrUpdateRule()
     {
-        // Add a new item to the list
-        Rules.Add(new RuleViewModel()
+        RuleViewModel newRule = new()
         {
             Name = NewRuleName,
             Interval = decimal.ToInt32(NewRuleInterval ?? decimal.Zero),
@@ -278,7 +276,16 @@ public partial class MainWindowViewModel : ViewModelBase
                 TitleFilterTerms = NewRuleTitleFilterArrayString is not null ? NewRuleTitleFilterArrayString.Split("||") : []
             }
 
-        });
+        };
+        //If existing rule (as determined by name equality) replace. Else, add.
+        if (Rules.Where(x => x.Name == newRule.Name).Any())
+        {
+            Rules[Rules.IndexOf(Rules.Where(x => x.Name == newRule.Name).First())] = newRule;
+        }
+        else
+        {
+            Rules.Add(newRule);
+        }
 
         // reset the fields
         NewRuleName = null;
