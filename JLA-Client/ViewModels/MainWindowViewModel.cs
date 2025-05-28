@@ -7,6 +7,7 @@ using System;
 using JLAClient.Models;
 using System.Globalization;
 using Microsoft.VisualBasic;
+using JLAClient.Converters;
 
 namespace JLAClient.ViewModels;
 
@@ -228,10 +229,10 @@ public partial class MainWindowViewModel : ViewModelBase
         && NewRuleStateAbbrev.Length == 2
         //Longitude string validation
         && !string.IsNullOrWhiteSpace(NewRuleLongitudeString)
-        && int.TryParse(NewRuleLongitudeString, out _)
+        && decimal.TryParse(NewRuleLongitudeString, out _)
         //Latitude string validation
         && !string.IsNullOrWhiteSpace(NewRuleLatitudeString)
-        && int.TryParse(NewRuleLatitudeString, out _)
+        && decimal.TryParse(NewRuleLatitudeString, out _)
         //GeoId string validation
         && !string.IsNullOrWhiteSpace(NewRuleGeoId)
         //Min Salary validation
@@ -287,6 +288,42 @@ public partial class MainWindowViewModel : ViewModelBase
             Rules.Add(newRule);
         }
 
+        ClearForm();
+    }
+    /// <summary>
+    /// This command is used to bring an existing rule's fields into the rule form
+    /// </summary>
+    /// <param name="rule">the rule to import</param>
+    [RelayCommand]
+    public void ImportRuleToForm(RuleViewModel rule)
+    {
+        NewRuleName = rule.Name;
+        NewRuleInterval = rule.Interval;
+        NewRuleDailyEndTime = rule.DailyEndTime;
+        NewRuleDailyStartTime = rule.DailyStartTime;
+        NewRuleSource = rule.RequestSpecifications!.Source;
+        NewRuleRadius = rule.RequestSpecifications!.Radius;
+        NewRuleSearchTerms = rule.RequestSpecifications!.SearchTerms;
+        NewRuleCulture = rule.RequestSpecifications!.CultureInfoString;
+        NewRuleIsRemote = rule.RequestSpecifications!.IsRemote;
+        NewRuleCity = rule.RequestSpecifications!.City;
+        NewRuleState = rule.RequestSpecifications!.State;
+        NewRuleStateAbbrev = rule.RequestSpecifications!.StateAbbrev;
+        NewRuleLongitudeString = rule.RequestSpecifications!.Longitude;
+        NewRuleLatitudeString = rule.RequestSpecifications!.Latitude;
+        NewRuleGeoId = rule.RequestSpecifications!.GeoId;
+        NewRuleMaxSalary = rule.RequestSpecifications!.MaxSalary;
+        NewRuleMinSalary = rule.RequestSpecifications!.MinSalary;
+        NewRuleJobCategory = rule.RequestSpecifications!.BuiltInJobCategory;
+        NewRuleCompanyFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.CompanyFilterTerms, typeof(string), null, CultureInfo.CurrentCulture)??"";
+        NewRuleTitleFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.TitleFilterTerms, typeof(string), null, CultureInfo.CurrentCulture)??"";
+    }
+    /// <summary>
+    /// This command is used to clear the form of all values
+    /// </summary>
+    [RelayCommand]
+    public void ClearForm()
+    {
         // reset the fields
         NewRuleName = null;
         NewRuleInterval = null;
@@ -308,7 +345,6 @@ public partial class MainWindowViewModel : ViewModelBase
         NewRuleJobCategory = null;
         NewRuleCompanyFilterArrayString = null;
         NewRuleTitleFilterArrayString = null;
-
     }
 
 

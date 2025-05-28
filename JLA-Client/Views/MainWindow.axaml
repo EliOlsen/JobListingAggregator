@@ -143,11 +143,16 @@
                                         </StackPanel>
                                     </StackPanel>
                                     <!--  Note how we use the Root-Grid to get the MainWindowViewModel here. As we use compiled bindings we have to cast the DataContext  -->
-                                    <Button Command="{Binding #ConfigRoot.((vm:MainWindowViewModel)DataContext).RemoveRuleCommand}"
-                                            CommandParameter="{Binding .}"
-                                            Grid.Column="1">
-                                        Delete
-                                    </Button>
+                                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                                        <Button Command="{Binding #ConfigRoot.((vm:MainWindowViewModel)DataContext).RemoveRuleCommand}"
+                                            CommandParameter="{Binding .}">
+                                            Delete
+                                        </Button>
+                                        <Button Command="{Binding #ConfigRoot.((vm:MainWindowViewModel)DataContext).ImportRuleToFormCommand}"
+                                            CommandParameter="{Binding .}">
+                                            Edit
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -237,6 +242,9 @@
                     </TextBox>
                     <Button Command="{Binding AddOrUpdateRuleCommand}" >
                         Add / Update
+                    </Button>
+                    <Button Command="{Binding ClearFormCommand}" >
+                        Clear
                     </Button>
                 </StackPanel>
             </Grid>
