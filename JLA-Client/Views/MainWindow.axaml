@@ -170,10 +170,13 @@
                         Text = "{Binding NewRuleDailyEndTimeString}"
                         Watermark = "Daily End Time (hh:mm:ss)">
                     </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleSource}"
-                        Watermark = "Source">
-                    </TextBox>
+                    <ComboBox ItemsSource="{Binding AcceptedSources}" SelectedValue="{Binding NewRuleSource}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <CheckBox Content="Is Remote"
                         IsChecked="{Binding NewRuleIsRemote}" />
                     <TextBox

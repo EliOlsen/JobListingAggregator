@@ -100,7 +100,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
     private string? _newRuleSource;
-    private string[] acceptedSources = ["dummy", "all", "linkedin", "builtin", "dice", "glassdoor", "indeed"];
+    /// <summary>
+    /// Hardcoded list of acceptable source strings, for use in the dropdown.
+    /// </summary>
+    [ObservableProperty]
+    private string[] _acceptedSources = ["dummy", "all", "linkedin", "builtin", "dice", "glassdoor", "indeed"];
     /// <summary>
     /// Gets or set the radius for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
     /// </summary>
@@ -209,7 +213,6 @@ public partial class MainWindowViewModel : ViewModelBase
         && TimeSpan.TryParse(NewRuleDailyEndTimeString, out _)
         //Source validation
         && NewRuleSource is not null
-        && acceptedSources.Contains(NewRuleSource.ToLower())
         //Radius validation
         && NewRuleRadiusString is not null
         && !NewRuleRadiusString.Contains('-')
