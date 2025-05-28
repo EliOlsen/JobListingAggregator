@@ -77,11 +77,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleName;
     /// <summary>
-    /// Gets or set the interval in seconds for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// Gets or set the interval in seconds for a new rule. If this decimal is not null and positive, the AddRuleCommand will be enabled automatically (with rounding)
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
-    private string? _newRuleIntervalString;
+    private decimal? _newRuleInterval;
     // <summary>
     /// Gets or set the daily start time for a new rule. If this TimeSpan is not null, the AddRuleCommand will be enabled automatically
     /// </summary>
@@ -106,11 +106,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string[] _acceptedSources = ["dummy", "all", "linkedin", "builtin", "dice", "glassdoor", "indeed"];
     /// <summary>
-    /// Gets or set the radius for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// Gets or set the radius for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
-    private string? _newRuleRadiusString;
+    private decimal? _newRuleRadius;
     // <summary>
     /// Gets or set the isRemote bool for the new rule.
     /// </summary>
@@ -165,17 +165,17 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleGeoId;
     /// <summary>
-    /// Gets or set the min salary for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// Gets or set the min salary for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
-    private string? _newRuleMinSalary;
+    private decimal? _newRuleMinSalary;
     /// <summary>
-    /// Gets or set the max salary for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// Gets or set the max salary for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
-    private string? _newRuleMaxSalary;
+    private decimal? _newRuleMaxSalary;
     /// <summary>
     /// Gets or set the BuiltIn Job Category for a new rule.
     /// </summary>
@@ -197,14 +197,15 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Returns if a new Rule can be added. There are (many) validation requirements to check
     /// </summary>
-    private bool CanAddRule() =>
+    private bool CanAddRule()
+    {
+        return
         //Name validation
         !string.IsNullOrWhiteSpace(NewRuleName)
         && !Rules.Where(x => x.Name == NewRuleName).Any()
         //Interval validation
-        && NewRuleIntervalString is not null
-        && !NewRuleIntervalString.Contains('-')
-        && int.TryParse(NewRuleIntervalString, out _)
+        && NewRuleInterval is not null
+        && NewRuleInterval >= 0
         //Daily Start Time validation
         && NewRuleDailyStartTime is not null
         //Daily End Time validation
@@ -212,9 +213,8 @@ public partial class MainWindowViewModel : ViewModelBase
         //Source validation
         && NewRuleSource is not null
         //Radius validation
-        && NewRuleRadiusString is not null
-        && !NewRuleRadiusString.Contains('-')
-        && int.TryParse(NewRuleRadiusString, out _)
+        && NewRuleRadius is not null
+        && NewRuleRadius > 0
         //Search Terms validation
         && !string.IsNullOrWhiteSpace(NewRuleSearchTerms)
         //Culture validation
@@ -236,15 +236,13 @@ public partial class MainWindowViewModel : ViewModelBase
         && !string.IsNullOrWhiteSpace(NewRuleGeoId)
         //Min Salary validation
         && NewRuleMinSalary is not null
-        && !NewRuleMinSalary.Contains('-')
-        && int.TryParse(NewRuleMinSalary, out _)
+        && NewRuleMinSalary >= 0
         //Max Salary validation
         && NewRuleMaxSalary is not null
-        && !NewRuleMaxSalary.Contains('-')
-        && int.TryParse(NewRuleMaxSalary, out _)
+        && NewRuleMaxSalary >= 0
         //BuiltIn Job Category validation
-        && !string.IsNullOrWhiteSpace(NewRuleJobCategory)
-        ;
+        && !string.IsNullOrWhiteSpace(NewRuleJobCategory);
+    }
     /// <summary>
     /// This command is used to add a new Rule to the List
     /// </summary>
@@ -255,15 +253,15 @@ public partial class MainWindowViewModel : ViewModelBase
         Rules.Add(new RuleViewModel()
         {
             Name = NewRuleName,
-            Interval = int.Parse(NewRuleIntervalString!),
+            Interval = decimal.ToInt32(NewRuleInterval ?? decimal.Zero),
             DailyStartTime = NewRuleDailyStartTime?? TimeSpan.Zero,
-            DailyEndTime = NewRuleDailyStartTime?? TimeSpan.Zero,
+            DailyEndTime = NewRuleDailyEndTime?? TimeSpan.Zero,
             RequestSpecifications = new()
             {
                 Source = NewRuleSource!,
                 CutoffTime = DateTime.Now,
                 IsRemote = NewRuleIsRemote,
-                Radius = int.Parse(NewRuleRadiusString!),
+                Radius = decimal.ToInt32(NewRuleRadius ?? decimal.Zero),
                 SearchTerms = NewRuleSearchTerms!,
                 CultureInfoString = NewRuleCulture!,
                 City = NewRuleCity!,
@@ -272,8 +270,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 Longitude = NewRuleLongitudeString!,
                 Latitude = NewRuleLatitudeString!,
                 GeoId = NewRuleGeoId!,
-                MaxSalary = int.Parse(NewRuleMaxSalary!),
-                MinSalary = int.Parse(NewRuleMinSalary!),
+                MaxSalary = decimal.ToInt32(NewRuleMaxSalary ?? decimal.Zero),
+                MinSalary = decimal.ToInt32(NewRuleMinSalary ?? decimal.Zero),
                 BuiltInJobCategory = NewRuleJobCategory!,
                 CompanyFilterTerms = NewRuleCompanyFilterArrayString!.Split("||"),
                 TitleFilterTerms = NewRuleTitleFilterArrayString!.Split("||")
