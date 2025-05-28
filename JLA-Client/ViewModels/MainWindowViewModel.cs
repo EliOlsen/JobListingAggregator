@@ -64,7 +64,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         return true;
     }
-
+    /// <summary>
+    /// Determines whether the expand the editor form resides within is expanded or not
+    /// </summary>
     [ObservableProperty]
     public bool _isRuleEditorExpanded;
 
@@ -318,7 +320,7 @@ public partial class MainWindowViewModel : ViewModelBase
         NewRuleJobCategory = rule.RequestSpecifications!.BuiltInJobCategory;
         NewRuleCompanyFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.CompanyFilterTerms, typeof(string), null, CultureInfo.CurrentCulture) ?? "";
         NewRuleTitleFilterArrayString = (string?)new StringArrayToString().Convert(rule.RequestSpecifications!.TitleFilterTerms, typeof(string), null, CultureInfo.CurrentCulture) ?? "";
-        IsRuleEditorExpanded = true;
+        IsRuleEditorExpanded = true; //Automatically expand the form if it's not already expanded
     }
     /// <summary>
     /// This command is used to clear the form of all values
