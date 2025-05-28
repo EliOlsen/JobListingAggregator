@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using JLAClient.Models;
+using System.Globalization;
 
 namespace JLAClient.ViewModels;
 
@@ -70,15 +71,221 @@ public partial class MainWindowViewModel : ViewModelBase
     public ObservableCollection<RuleViewModel> Rules { get; } = [];
 
     /// <summary>
+    /// Gets or set the name for a new rule. If this string is not empty and unique, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleName;
+    /// <summary>
+    /// Gets or set the interval in seconds for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    private string? _newRuleIntervalString;
+    // <summary>
+    /// Gets or set the daily start time for a new rule. If this string is not empty and parses to a timespan, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    private string? _newRuleDailyStartTimeString;
+    // <summary>
+    /// Gets or set the daily end time for a new rule. If this string is not empty and parses to a timespan, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    private string? _newRuleDailyEndTimeString;
+    /// <summary>
+    /// Gets or set the jobsite source for a new rule. If this string equals one of the accepted values, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    private string? _newRuleSource;
+    private string[] acceptedSources = ["dummy", "all", "linkedin", "builtin", "dice", "glassdoor", "indeed"];
+    /// <summary>
+    /// Gets or set the radius for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    private string? _newRuleRadiusString;
+    // <summary>
+    /// Gets or set the isRemote bool for the new rule.
+    /// </summary>
+    [ObservableProperty]
+    private bool _newRuleIsRemote;
+    /// <summary>
+    /// Gets or set the search terms for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleSearchTerms;
+    /// <summary>
+    /// Gets or set the cultural string for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleCulture;
+    /// <summary>
+    /// Gets or set the city for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleCity;
+    /// <summary>
+    /// Gets or set the State for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleState;
+    /// <summary>
+    /// Gets or set the State Abbreviation for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleStateAbbrev;
+    /// <summary>
+    /// Gets or set the Longitude for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleLongitudeString;
+    /// <summary>
+    /// Gets or set the Latitude for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleLatitudeString;
+    /// <summary>
+    /// Gets or set the LinkedIn GeoId for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleGeoId;
+    /// <summary>
+    /// Gets or set the min salary for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    private string? _newRuleMinSalary;
+    /// <summary>
+    /// Gets or set the max salary for a new rule. If this string is not empty and parses to a non-negative int, the AddRuleCommand will be enabled automatically
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
+    private string? _newRuleMaxSalary;
+    /// <summary>
+    /// Gets or set the BuiltIn Job Category for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))] // This attribute will invalidate the command each time this property changes
+    private string? _newRuleJobCategory;
+    /// <summary>
+    /// Gets or set the company filter array for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    private string? _newRuleCompanyFilterArrayString;
+    /// <summary>
+    /// Gets or set the title filter array for a new rule.
+    /// </summary>
+    [ObservableProperty]
+    private string? _newRuleTitleFilterArrayString;
+
+
+    /// <summary>
+    /// Returns if a new Rule can be added. There are (many) validation requirements to check
+    /// </summary>
+    private bool CanAddRule() =>
+        //Name validation
+        !string.IsNullOrWhiteSpace(NewRuleName)
+        && !Rules.Where(x => x.Name == NewRuleName).Any()
+        //Interval validation
+        && NewRuleIntervalString is not null
+        && !NewRuleIntervalString.Contains('-')
+        && int.TryParse(NewRuleIntervalString, out _)
+        //Daily Start Time validation
+        && NewRuleDailyStartTimeString is not null
+        && TimeSpan.TryParse(NewRuleDailyStartTimeString, out _)
+        //Daily End Time validation
+        && NewRuleDailyEndTimeString is not null
+        && TimeSpan.TryParse(NewRuleDailyEndTimeString, out _)
+        //Source validation
+        && NewRuleSource is not null
+        && acceptedSources.Contains(NewRuleSource.ToLower())
+        //Radius validation
+        && NewRuleRadiusString is not null
+        && !NewRuleRadiusString.Contains('-')
+        && int.TryParse(NewRuleRadiusString, out _)
+        //Search Terms validation
+        && !string.IsNullOrWhiteSpace(NewRuleSearchTerms)
+        //Culture validation
+        && !string.IsNullOrWhiteSpace(NewRuleCulture)
+        //City validation
+        && !string.IsNullOrWhiteSpace(NewRuleCity)
+        //State validation
+        && !string.IsNullOrWhiteSpace(NewRuleState)
+        //State Abbreviation validation
+        && !string.IsNullOrWhiteSpace(NewRuleStateAbbrev)
+        && NewRuleStateAbbrev.Length == 2
+        //Longitude string validation
+        && !string.IsNullOrWhiteSpace(NewRuleLongitudeString)
+        && int.TryParse(NewRuleLongitudeString, out _)
+        //Latitude string validation
+        && !string.IsNullOrWhiteSpace(NewRuleLatitudeString)
+        && int.TryParse(NewRuleLatitudeString, out _)
+        //GeoId string validation
+        && !string.IsNullOrWhiteSpace(NewRuleGeoId)
+        //Min Salary validation
+        && NewRuleMinSalary is not null
+        && !NewRuleMinSalary.Contains('-')
+        && int.TryParse(NewRuleMinSalary, out _)
+        //Max Salary validation
+        && NewRuleMaxSalary is not null
+        && !NewRuleMaxSalary.Contains('-')
+        && int.TryParse(NewRuleMaxSalary, out _)
+        //BuiltIn Job Category validation
+        && !string.IsNullOrWhiteSpace(NewRuleJobCategory)
+        ;
+    /// <summary>
     /// This command is used to add a new Rule to the List
     /// </summary>
-    /// <param name="rule">the rule to add</param>
-    [RelayCommand]
-    public void AddRule(RuleViewModel rule)
+    [RelayCommand (CanExecute = nameof(CanAddRule))]
+    private void AddRule()
     {
-        // Add a new rule to the list
-        Rules.Add(rule);
+        // Add a new item to the list
+        Rules.Add(new RuleViewModel()
+        {
+            Name = NewRuleName,
+            Interval = int.Parse(NewRuleIntervalString!),
+            DailyStartTime = TimeSpan.Parse(NewRuleDailyStartTimeString!),
+            DailyEndTime = TimeSpan.Parse(NewRuleDailyEndTimeString!),
+            RequestSpecifications = new()
+            {
+                Source = NewRuleSource!,
+                CutoffTime = DateTime.Now,
+                IsRemote = NewRuleIsRemote,
+                Radius = int.Parse(NewRuleRadiusString!),
+                SearchTerms = NewRuleSearchTerms!,
+                CultureInfoString = NewRuleCulture!,
+                City = NewRuleCity!,
+                State = NewRuleState!,
+                StateAbbrev = NewRuleStateAbbrev!,
+                Longitude = NewRuleLongitudeString!,
+                Latitude = NewRuleLatitudeString!,
+                GeoId = NewRuleGeoId!,
+                MaxSalary = int.Parse(NewRuleMaxSalary!),
+                MinSalary = int.Parse(NewRuleMinSalary!),
+                BuiltInJobCategory = NewRuleJobCategory!,
+                CompanyFilterTerms = NewRuleCompanyFilterArrayString!.Split("||"),
+                TitleFilterTerms = NewRuleTitleFilterArrayString!.Split("||")
+            }
+            
+        });
+
+        // reset the NewRuleName
+        NewRuleName = null;
     }
+
+
+
     /// <summary>
     /// Removes the given rule from the list
     /// </summary>

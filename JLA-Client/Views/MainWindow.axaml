@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:conv="clr-namespace:JLAClient.Converters"
         mc:Ignorable="d"
-        Width="500" Height="500" Padding="4"
+        Width="500" Height="1000" Padding="4"
         x:Class="JLAClient.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -67,7 +67,7 @@
         </TabItem>
         <TabItem Header="Schedule">
             <!-- We give a name to the root grid in order to access it later -->
-            <Grid RowDefinitions="Auto, *" ShowGridLines = "true" x:Name="ConfigRoot">
+            <Grid RowDefinitions="Auto, *, Auto" ShowGridLines = "true" x:Name="ConfigRoot">
                 <!--  This is our title text block. We use Style.Classes to style it accordingly  -->
                 <StackPanel Orientation = "Vertical" Grid.Row = "0">
                     <TextBlock Classes="h1" Text="My Scheduled Updates"/>
@@ -153,6 +153,89 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                <StackPanel Orientation="Vertical" Grid.Row = "2">
+                    <TextBox
+                        Text = "{Binding NewRuleName}"
+                        Watermark = "Name">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleIntervalString}"
+                        Watermark = "Interval">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleDailyStartTimeString}"
+                        Watermark = "Daily Start Time (hh:mm:ss)">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleDailyEndTimeString}"
+                        Watermark = "Daily End Time (hh:mm:ss)">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleSource}"
+                        Watermark = "Source">
+                    </TextBox>
+                    <CheckBox Content="Is Remote"
+                        IsChecked="{Binding NewRuleIsRemote}" />
+                    <TextBox
+                        Text = "{Binding NewRuleRadiusString}"
+                        Watermark = "Radius">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleSearchTerms}"
+                        Watermark = "Search Terms">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleCulture}"
+                        Watermark = "Cultural Info specififer (eg 'en-US')">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleCity}"
+                        Watermark = "City">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleState}"
+                        Watermark = "State">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleStateAbbrev}"
+                        Watermark = "State Abbreviation">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleLongitudeString}"
+                        Watermark = "Longitude">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleLatitudeString}"
+                        Watermark = "Latitude">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleGeoId}"
+                        Watermark = "GeoId">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleMinSalary}"
+                        Watermark = "Minimum Salary">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleMaxSalary}"
+                        Watermark = "Maximum Salary">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleJobCategory}"
+                        Watermark = "BuiltIn Job Category">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleTitleFilterArrayString}"
+                        Watermark = "Job Title Keyword Filters">
+                    </TextBox>
+                    <TextBox
+                        Text = "{Binding NewRuleCompanyFilterArrayString}"
+                        Watermark = "Job Company Filters">
+                    </TextBox>
+                    <Button Command="{Binding AddRuleCommand}" >
+                        Add
+                    </Button>
+                </StackPanel>
             </Grid>
         </TabItem>
     </TabControl>
