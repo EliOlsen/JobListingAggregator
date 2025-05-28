@@ -158,99 +158,60 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <Expander VerticalAlignment="Bottom" Grid.Row="2" IsExpanded="{Binding IsRuleEditorExpanded}">
+                <Expander VerticalAlignment="Bottom" Grid.Row="2" IsExpanded="{Binding IsRuleEditorExpanded}" HorizontalAlignment="Stretch">
                     <Expander.Header>
                         Add / Update Rules
                     </Expander.Header>
-                        <StackPanel Orientation="Vertical">
-                        <TextBox
-                            Text = "{Binding NewRuleName}"
-                            Watermark = "Name">
-                        </TextBox>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Interval (in seconds): "/>
-                            <NumericUpDown Value="{Binding NewRuleInterval}" Increment="1" FormatString="0" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Daily Start Time: "/>
-                            <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyStartTime}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Daily End Time:   "/>
-                            <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyEndTime}"/>
-                        </StackPanel>
-                        <ComboBox ItemsSource="{Binding AcceptedSources}" SelectedValue="{Binding NewRuleSource}">
+                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ShowGridLines="false">
+                        <TextBlock Text="Name: " Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleName}" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Interval (seconds): " Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleInterval}" Grid.Row="1" Grid.Column="1" Increment="1" FormatString="0" Minimum="0" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Daily Start Time: " Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" Grid.Row="2" Grid.Column="1" SelectedTime="{Binding NewRuleDailyStartTime}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Daily End Time: " Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" Grid.Row="3" Grid.Column="1" SelectedTime="{Binding NewRuleDailyEndTime}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Job Listing Source: " Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding AcceptedSources}" SelectedValue="{Binding NewRuleSource}" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding}" />
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <CheckBox Content="Is Remote"
-                            IsChecked="{Binding NewRuleIsRemote}" />
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Radius (in miles): "/>
-                            <NumericUpDown Value="{Binding NewRuleRadius}" Increment="1" FormatString="0" Minimum="1" AllowSpin="false" ShowButtonSpinner="false"/>
-                        </StackPanel>
-                        <TextBox
-                            Text = "{Binding NewRuleSearchTerms}"
-                            Watermark = "Search Terms">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleCulture}"
-                            Watermark = "Cultural Info specififer (eg 'en-US')">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleCity}"
-                            Watermark = "City">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleState}"
-                            Watermark = "State">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleStateAbbrev}"
-                            Watermark = "State Abbreviation">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleLongitudeString}"
-                            Watermark = "Longitude">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleLatitudeString}"
-                            Watermark = "Latitude">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleGeoId}"
-                            Watermark = "GeoId">
-                        </TextBox>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Minimum Salary: "/>
-                            <NumericUpDown Value="{Binding NewRuleMinSalary}" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Maximum Salary: "/>
-                            <NumericUpDown Value="{Binding NewRuleMaxSalary}" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false"/>
-                        </StackPanel>
-                        <TextBox
-                            Text = "{Binding NewRuleJobCategory}"
-                            Watermark = "BuiltIn Job Category">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleTitleFilterArrayString}"
-                            Watermark = "Job Title Keyword Filters">
-                        </TextBox>
-                        <TextBox
-                            Text = "{Binding NewRuleCompanyFilterArrayString}"
-                            Watermark = "Job Company Filters">
-                        </TextBox>
-                        <Button Command="{Binding AddOrUpdateRuleCommand}" >
-                            Add / Update
-                        </Button>
-                        <Button Command="{Binding ClearFormCommand}" >
-                            Clear
-                        </Button>
-                    </StackPanel>
+                        <TextBlock Text="Remote: " Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <CheckBox IsChecked="{Binding NewRuleIsRemote}" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Radius (mi): " Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleRadius}" Grid.Row="6" Grid.Column="1" Increment="1" FormatString="0" Minimum="1" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Search Terms: " Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleSearchTerms}" Grid.Row="7" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Cultural (eg 'en-US'): " Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleCulture}" Grid.Row="8" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="City: " Grid.Row="9" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleCity}" Grid.Row="9" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="State: " Grid.Row="10" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleState}" Grid.Row="10" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="State Abbreviation: " Grid.Row="11" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleStateAbbrev}" Grid.Row="11" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Latitude: " Grid.Row="12" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleLatitudeString}" Grid.Row="12" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Longitude: " Grid.Row="13" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleLongitudeString}" Grid.Row="13" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="GeoId: " Grid.Row="14" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleGeoId}" Grid.Row="14" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Minimum Salary ($/yr): " Grid.Row="15" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleMinSalary}" Grid.Row="15" Grid.Column="1" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Maximum Salary ($/yr): " Grid.Row="16" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleMaxSalary}" Grid.Row="16" Grid.Column="1" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="BuiltIn Job Category: " Grid.Row="17" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleJobCategory}" Grid.Row="17" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Job Title Keyword Filters: " Grid.Row="18" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleTitleFilterArrayString}" Grid.Row="18" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Job Company Filters: " Grid.Row="19" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleCompanyFilterArrayString}" Grid.Row="19" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <Button Command="{Binding ClearFormCommand}" Grid.Row="20" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left">Clear</Button>
+                        <Button Command="{Binding AddOrUpdateRuleCommand}" Grid.Row="20" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">Add / Update</Button>
+                    </Grid>
                 </Expander>
             </Grid>
         </TabItem>
