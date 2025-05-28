@@ -83,17 +83,17 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
     private string? _newRuleIntervalString;
     // <summary>
-    /// Gets or set the daily start time for a new rule. If this string is not empty and parses to a timespan, the AddRuleCommand will be enabled automatically
+    /// Gets or set the daily start time for a new rule. If this TimeSpan is not null, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
-    private string? _newRuleDailyStartTimeString;
+    private TimeSpan? _newRuleDailyStartTime;
     // <summary>
-    /// Gets or set the daily end time for a new rule. If this string is not empty and parses to a timespan, the AddRuleCommand will be enabled automatically
+    /// Gets or set the daily end time for a new rule. If this TimeSpan is not null, the AddRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddRuleCommand))]
-    private string? _newRuleDailyEndTimeString;
+    private TimeSpan? _newRuleDailyEndTime;
     /// <summary>
     /// Gets or set the jobsite source for a new rule. If this string equals one of the accepted values, the AddRuleCommand will be enabled automatically
     /// </summary>
@@ -206,11 +206,9 @@ public partial class MainWindowViewModel : ViewModelBase
         && !NewRuleIntervalString.Contains('-')
         && int.TryParse(NewRuleIntervalString, out _)
         //Daily Start Time validation
-        && NewRuleDailyStartTimeString is not null
-        && TimeSpan.TryParse(NewRuleDailyStartTimeString, out _)
+        && NewRuleDailyStartTime is not null
         //Daily End Time validation
-        && NewRuleDailyEndTimeString is not null
-        && TimeSpan.TryParse(NewRuleDailyEndTimeString, out _)
+        && NewRuleDailyEndTime is not null
         //Source validation
         && NewRuleSource is not null
         //Radius validation
@@ -258,8 +256,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Name = NewRuleName,
             Interval = int.Parse(NewRuleIntervalString!),
-            DailyStartTime = TimeSpan.Parse(NewRuleDailyStartTimeString!),
-            DailyEndTime = TimeSpan.Parse(NewRuleDailyEndTimeString!),
+            DailyStartTime = NewRuleDailyStartTime?? TimeSpan.Zero,
+            DailyEndTime = NewRuleDailyStartTime?? TimeSpan.Zero,
             RequestSpecifications = new()
             {
                 Source = NewRuleSource!,

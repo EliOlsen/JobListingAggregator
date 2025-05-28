@@ -162,14 +162,14 @@
                         Text = "{Binding NewRuleIntervalString}"
                         Watermark = "Interval">
                     </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleDailyStartTimeString}"
-                        Watermark = "Daily Start Time (hh:mm:ss)">
-                    </TextBox>
-                    <TextBox
-                        Text = "{Binding NewRuleDailyEndTimeString}"
-                        Watermark = "Daily End Time (hh:mm:ss)">
-                    </TextBox>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Daily Start Time: "/>
+                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyStartTime}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Daily End Time:   "/>
+                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" SelectedTime="{Binding NewRuleDailyEndTime}"/>
+                    </StackPanel>
                     <ComboBox ItemsSource="{Binding AcceptedSources}" SelectedValue="{Binding NewRuleSource}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
