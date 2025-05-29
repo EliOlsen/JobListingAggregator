@@ -2,14 +2,20 @@ using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 namespace JLALibrary;
-
 public class UserJsonConfiguration<T>
 {
+    /// <summary>
+    /// Retrieves and validates the contents of a Json file at a given path, as an object of type T. 
+    /// Uses the default object provided to create said file if it does not exist, and to fill in any missing values if it exists but is incomplete
+    /// </summary>
+    /// <param name="defaultConfiguration">An object of type T to serve as the default in case of missing or incomplete file</param>
+    /// <param name="configFilePath">The path of the configuration file in question</param>
     public async Task<T> RetrieveAndValidateSettings(T defaultConfiguration, string configFilePath)
     {
         //First, let's ensure we didn't pass a null for default configuration.
         if (defaultConfiguration is null)
         {
+            FormattedConsoleOutput.Warning("Default configuration is null! Returning that null, because this is a serious problem.");
             return defaultConfiguration; //Not sure I actually want to do this
         }
         if (!File.Exists(configFilePath))
