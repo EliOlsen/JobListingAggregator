@@ -9,6 +9,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using JLALibrary;
 using JLAClient.Models;
+using JLAClient.Interfaces;
 using JLALibrary.Models;
 namespace JLAClient.Services;
 public class RabbitMQService : IAsyncDisposable

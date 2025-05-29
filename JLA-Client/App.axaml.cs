@@ -10,6 +10,7 @@ using JLAClient.ViewModels;
 using JLAClient.Views;
 using JLAClient.Services;
 using JLAClient.Models;
+using JLAClient.Interfaces;
 namespace JLAClient;
 public partial class App : Application
 {
@@ -50,11 +51,10 @@ public partial class App : Application
         if (scheduledRules is not null) _mainViewModel.AppendRules(scheduledRules, false);
         //Initial periodic item save in case of computer crash
         _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));
-        //Initialize the JobRequestService (ATM always RabbitMQ)
-        _jobRequestService = new MyRabbitMQ();
-
-
-        //Initialize the RabbitMQ system and pass it the rules so it knows what to automatically send out
+        //Initialize the JobRequestService based on config value
+        if (configuration.UseRabbitMQ) _jobRequestService = new MyRabbitMQ();
+        else _jobRequestService = new HTTPRequestService();
+        //Initialize the job request system and pass it the rules so it knows what to automatically send out
         await _jobRequestService.Initialize(_mainViewModel.AppendListings, scheduledRules, lastTimeListingsSaved, configuration);
         //Done with initialization
         base.OnFrameworkInitializationCompleted();
