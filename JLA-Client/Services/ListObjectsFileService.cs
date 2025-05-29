@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using System.Collections.Generic;
 namespace JLAClient.Services;
-
 public class ListObjectsFileService<T>()
 {
     public string? filePath;
@@ -21,7 +19,8 @@ public class ListObjectsFileService<T>()
     {
         if (filePath is null) return;
         // Ensure all directories exists
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+        string parentFilePath = Path.GetDirectoryName(filePath)?? "Error";
+        Directory.CreateDirectory(parentFilePath);//Note: I do actually want any exceptions here to end the program; if this is broken, there's no point in continuing
         // We use a FileStream to write all listings to disc
         using var fs = File.Create(filePath);
         await JsonSerializer.SerializeAsync(fs, listToSave);

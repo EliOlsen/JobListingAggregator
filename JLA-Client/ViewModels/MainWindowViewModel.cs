@@ -1,25 +1,21 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Linq;
+using System.Globalization;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.Generic;
-using System.Linq;
-using System;
 using JLAClient.Models;
-using System.Globalization;
-using Microsoft.VisualBasic;
 using JLAClient.Converters;
-
 namespace JLAClient.ViewModels;
-
 public partial class MainWindowViewModel : ViewModelBase
 {
     /// <summary>
-    /// Gets a collection of <see cref="DisplayableJobListing"/> which allows adding and removing listings
+    /// Gets a collection of <see cref="DisplayableJobListing"/>, which allows adding and removing listings
     /// </summary>
     public ObservableCollection<ListingViewModel> Listings { get; } = [];
-
     /// <summary>
-    /// This command is used to add a new Listing to the List
+    /// This command is used to add a new ListingViewModel to the List
     /// </summary>
     /// <param name="jobListing">the jobListing to add</param>
     [RelayCommand]
@@ -38,7 +34,6 @@ public partial class MainWindowViewModel : ViewModelBase
         // Remove the given listing from the list
         Listings.Remove(jobListing);
     }
-
     /// <summary>
     /// Removes all Listings from the list
     /// </summary>
@@ -48,59 +43,58 @@ public partial class MainWindowViewModel : ViewModelBase
         Listings.Clear();
     }
     /// <summary>
-    /// Appends all DisplayableJobListings of a list that are not already in Listings
+    /// Appends all DisplayableJobListings of a list that are not already in Listings, with a boolean whether to put them at the top or bottom of the existing list.
     /// </summary>
     /// <param name="newListings">the DisplayableJobListings to append if unique</param>
-    public bool AppendListings(IEnumerable<DisplayableJobListing> newListings, bool PushToFront)
+    /// /// <param name="pushToFront">the bool to determine whether new listings are inserted at index 0. If not, they are added to the end.</param>
+    public bool AppendListings(IEnumerable<DisplayableJobListing> newListings, bool pushToFront)
     {
         foreach (DisplayableJobListing displayableListing in newListings)
         {   //Check that our listing id is not null, and that a listing with that id is not already present
             var firstOrDefaultListing = Listings.FirstOrDefault(a => a.GetDisplayableJobListing().Listing.JobsiteId == displayableListing.Listing.JobsiteId) ?? null;
             if (displayableListing.Listing.JobsiteId is not null && firstOrDefaultListing is null)
             {
-                if (PushToFront) Listings.Insert(0, new ListingViewModel(displayableListing));
+                if (pushToFront) Listings.Insert(0, new ListingViewModel(displayableListing));
                 else Listings.Add(new ListingViewModel(displayableListing));
             }
         }
-        return true;
+        return true; //Could be void, but I'm passing this function around and in that case it's not allowed to have a void return type so far as I understand things.
     }
     /// <summary>
     /// Determines whether the expand the editor form resides within is expanded or not
     /// </summary>
     [ObservableProperty]
     public bool _isRuleEditorExpanded;
-
     /// <summary>
     /// Gets a collection of <see cref="ScheduleRule"/> which allows adding and removing scheduled rules
     /// </summary>
     public ObservableCollection<RuleViewModel> Rules { get; } = [];
-
     /// <summary>
-    /// Gets or set the name for a new rule. If this string is not empty and unique, the AddRuleCommand will be enabled automatically
+    /// Gets or set the name for a new rule. If this string is not empty and unique, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleName;
     /// <summary>
-    /// Gets or set the interval in seconds for a new rule. If this decimal is not null and positive, the AddRuleCommand will be enabled automatically (with rounding)
+    /// Gets or set the interval in seconds for a new rule. If this decimal is not null and positive, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private decimal? _newRuleInterval;
     // <summary>
-    /// Gets or set the daily start time for a new rule. If this TimeSpan is not null, the AddRuleCommand will be enabled automatically
+    /// Gets or set the daily start time for a new rule. If this TimeSpan is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private TimeSpan? _newRuleDailyStartTime;
     // <summary>
-    /// Gets or set the daily end time for a new rule. If this TimeSpan is not null, the AddRuleCommand will be enabled automatically
+    /// Gets or set the daily end time for a new rule. If this TimeSpan is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private TimeSpan? _newRuleDailyEndTime;
     /// <summary>
-    /// Gets or set the jobsite source for a new rule. If this string equals one of the accepted values, the AddRuleCommand will be enabled automatically
+    /// Gets or set the jobsite source for a new rule. If this string equals one of the accepted values, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
@@ -109,96 +103,95 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Hardcoded list of acceptable source strings, for use in the dropdown.
     /// </summary>
     [ObservableProperty]
-    private string[] _acceptedSources = ["dummy", "all", "linkedin", "builtin", "dice", "glassdoor", "indeed"];
+    private string[] _acceptedSources = ["dummy", "all", "linkedin", "builtin", "dice", "glassdoor", "indeed"];//TODO: Create this array programatically off of the Jobsite Enum (minus the error option), which will live in JLA-Library
     /// <summary>
-    /// Gets or set the radius for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
+    /// Gets or set the radius for a new rule. If this Decimal is not null and positive, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private decimal? _newRuleRadius;
     // <summary>
-    /// Gets or set the isRemote bool for the new rule.
+    /// Gets or set the isRemote bool for the new rule. (no need for validation, will always be true or false and either is valid)
     /// </summary>
     [ObservableProperty]
     private bool _newRuleIsRemote;
     /// <summary>
-    /// Gets or set the search terms for a new rule.
+    /// Gets or set the search terms for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleSearchTerms;
     /// <summary>
-    /// Gets or set the cultural string for a new rule.
+    /// Gets or set the cultural string for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleCulture;
+    private string? _newRuleCulture; //TODO: Make this a dropdown... with probably just the one option for now. It's dumb to write it out every time.
     /// <summary>
-    /// Gets or set the city for a new rule.
+    /// Gets or set the city for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleCity;
     /// <summary>
-    /// Gets or set the State for a new rule.
+    /// Gets or set the State for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleState;
+    private string? _newRuleState; //I think it's out of the scope of this project to accomodate other geographical address schemas... for now. We'll stick to the US.
+    //TODO: Convert this to an autocomplete dropdown. Misspelling a state is an entirely avoidable issue.
     /// <summary>
-    /// Gets or set the State Abbreviation for a new rule.
+    /// Gets or set the State Abbreviation for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleStateAbbrev;
+    private string? _newRuleStateAbbrev; //TODO: Remove this from visibility outright, and grab it via dictionary from the state variable.
     /// <summary>
-    /// Gets or set the Longitude for a new rule.
+    /// Gets or set the Longitude for a new rule. If this string is not null and parses to a valid decimal, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleLongitudeString;
+    private string? _newRuleLongitudeString; //TODO: Remove from visibility outright. Grab from a third party API using city and state variables?
     /// <summary>
-    /// Gets or set the Latitude for a new rule.
+    /// Gets or set the Latitude for a new rule. If this string is not null and parses to a valid decimal, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleLatitudeString;
+    private string? _newRuleLatitudeString; //TODO: Remove from visibility outright. Grab from a third party API using city and state variables?
     /// <summary>
-    /// Gets or set the LinkedIn GeoId for a new rule.
+    /// Gets or set the LinkedIn GeoId for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleGeoId;
+    private string? _newRuleGeoId; //TODO: Figure out what the heck this value actually means, and how to generate it programatically. Then remove it from visibility and do that instead.
     /// <summary>
-    /// Gets or set the min salary for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
+    /// Gets or set the min salary for a new rule. If this Decimal is not null and positive, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
-    private decimal? _newRuleMinSalary;
+    private decimal? _newRuleMinSalary;//TODO: I KNOW for a fact that I'm only using this for BuiltIn on the backend, but that some of the other sites can take it to. Fix that. If I have it, I should use it.
     /// <summary>
-    /// Gets or set the max salary for a new rule. If this Decimal is not null and positive, the AddRuleCommand will be enabled automatically
+    /// Gets or set the max salary for a new rule. If this Decimal is not null and positive, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
-    private decimal? _newRuleMaxSalary;
+    private decimal? _newRuleMaxSalary;//TODO: I KNOW for a fact that I'm only using this for BuiltIn on the backend, but that some of the other sites can take it to. Fix that. If I have it, I should use it.
     /// <summary>
-    /// Gets or set the BuiltIn Job Category for a new rule.
+    /// Gets or set the BuiltIn Job Category for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleJobCategory;
+    private string? _newRuleJobCategory;//TODO: Figure out how BuiltIn generates these, or at least assemble a list, and make them something other than typing in a string.
     /// <summary>
     /// Gets or set the company filter array for a new rule.
     /// </summary>
     [ObservableProperty]
-    private string? _newRuleCompanyFilterArrayString;
+    private string? _newRuleCompanyFilterArrayString; //TODO: I need a better way of having the user enter these.
     /// <summary>
     /// Gets or set the title filter array for a new rule.
     /// </summary>
     [ObservableProperty]
-    private string? _newRuleTitleFilterArrayString;
-
-
+    private string? _newRuleTitleFilterArrayString; //TODO: I need a better way of having the user enter these.
     /// <summary>
     /// Returns if a new Rule can be added. There are (many) validation requirements to check
     /// </summary>
@@ -248,14 +241,14 @@ public partial class MainWindowViewModel : ViewModelBase
         && !string.IsNullOrWhiteSpace(NewRuleJobCategory);
     }
     /// <summary>
-    /// This command is used to add a new Rule to the List
+    /// This command is used to add a new Rule to the List using the variables set by the form
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanAddOrUpdateRule))]
     private void AddOrUpdateRule()
     {
-        RuleViewModel newRule = new()
+        RuleViewModel newRule = new(new ScheduleRule
         {
-            Name = NewRuleName,
+            Name = NewRuleName!,
             Interval = decimal.ToInt32(NewRuleInterval ?? decimal.Zero),
             DailyStartTime = NewRuleDailyStartTime ?? TimeSpan.Zero,
             DailyEndTime = NewRuleDailyEndTime ?? TimeSpan.Zero,
@@ -279,9 +272,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 CompanyFilterTerms = NewRuleCompanyFilterArrayString is not null ? NewRuleCompanyFilterArrayString!.Split("||") : [],
                 TitleFilterTerms = NewRuleTitleFilterArrayString is not null ? NewRuleTitleFilterArrayString.Split("||") : []
             }
+        });
 
-        };
-        //If existing rule (as determined by name equality) replace. Else, add.
+        //If existing rule (as determined by name equality), replace. Else, add.
         if (Rules.Where(x => x.Name == newRule.Name).Any())
         {
             Rules[Rules.IndexOf(Rules.Where(x => x.Name == newRule.Name).First())] = newRule;
@@ -290,13 +283,13 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Rules.Add(newRule);
         }
-
+        //Now reset the form's many fields.
         ClearForm();
     }
     /// <summary>
     /// This command is used to bring an existing rule's fields into the rule form
     /// </summary>
-    /// <param name="rule">the rule to import</param>
+    /// <param name="rule">the rule to copy fields from</param>
     [RelayCommand]
     public void ImportRuleToForm(RuleViewModel rule)
     {
@@ -350,9 +343,6 @@ public partial class MainWindowViewModel : ViewModelBase
         NewRuleCompanyFilterArrayString = null;
         NewRuleTitleFilterArrayString = null;
     }
-
-
-
     /// <summary>
     /// Removes the given rule from the list
     /// </summary>
@@ -363,7 +353,6 @@ public partial class MainWindowViewModel : ViewModelBase
         // Remove the given rule from the list
         Rules.Remove(rule);
     }
-
     /// <summary>
     /// Removes all Rules from the list
     /// </summary>
@@ -380,13 +369,15 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         foreach (ScheduleRule scheduleRule in newRules)
         {   //Check that our rule name is not null, and that a rule with that name is not already present
+        //Unlike with adding new rules during runtime, I don't care if two rules in the rule file have the same id. Keep the first, ignore the following copies
             var firstOrDefaultRule = Rules.FirstOrDefault(a => a.GetScheduleRule().Name == scheduleRule.Name) ?? null;
             if (scheduleRule.Name is not null && firstOrDefaultRule is null)
             {
+                //Based on PushToFront, either add each new rule at the front of the list (inverting the given order of new rules, btw) or add at the end, preserving given order of new rules
                 if (PushToFront) Rules.Insert(0, new RuleViewModel(scheduleRule));
                 else Rules.Add(new RuleViewModel(scheduleRule));
             }
         }
-        return true;
+        return true; //Could be void, but I'm passing this function around and in that case it's not allowed to have a void return type so far as I understand things.
     }
 }

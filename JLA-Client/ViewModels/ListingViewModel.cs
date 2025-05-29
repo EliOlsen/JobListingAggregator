@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using JLAClient.Models;
 using JLALibrary.Models;
-
+using JLAClient.Models;
 namespace JLAClient.ViewModels;
 /// <summary>
 /// This is a ViewModel which represents a <see cref="DisplayableJobListing"/>
@@ -13,22 +12,11 @@ public partial class ListingViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private bool _hasBeenViewed;
-
     /// <summary>
     /// Gets or sets the listing object
     /// </summary>
     [ObservableProperty]
     private GenericJobListing? _listing;
-
-
-    /// <summary>
-    /// Creates a new blank JobListingViewModel
-    /// </summary>
-    public ListingViewModel()
-    {
-        // empty
-    }
-
     /// <summary>
     /// Creates a new JobListingViewModel for the given <see cref="DisplayableJobListing"/>
     /// </summary>
@@ -38,7 +26,6 @@ public partial class ListingViewModel : ViewModelBase
         // Init the properties with the given values
         HasBeenViewed = jobListing.HasBeenViewed;
         Listing = jobListing.Listing;
-
     }
     /// <summary>
     /// Gets a JobListing of this ViewModel
@@ -49,9 +36,7 @@ public partial class ListingViewModel : ViewModelBase
         return new DisplayableJobListing()
         {
             HasBeenViewed = this.HasBeenViewed,
-            Listing = this.Listing,
+            Listing = this.Listing!,
         };
-    }
-
-    
+    }   
 }

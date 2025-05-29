@@ -2,9 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
-
 namespace JLAClient.Converters;
-
 public class StringArrayToString : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -16,7 +14,6 @@ public class StringArrayToString : IValueConverter
         }
         return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
     }
-
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is string combinedString && targetType.IsAssignableTo(typeof(string[])))

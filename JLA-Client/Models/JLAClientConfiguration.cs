@@ -1,9 +1,8 @@
 namespace JLAClient.Models;
-
 public class JLAClientConfiguration()
 {
     /// <summary>
-    /// Gets or sets the schedule rule source path
+    /// Gets or sets the saved schedule rule source path
     /// </summary>
     public required string RulesSourcePath { get; set; }
     /// <summary>
@@ -31,7 +30,7 @@ public class JLAClientConfiguration()
     /// </summary>
     public required string HostName { get; set; }
     /// <summary>
-    /// Gets or sets the exchange to use for sending log messages
+    /// Gets or sets the exchange to use for sending log messages with RabbitMQ
     /// </summary>
     public required string LogExchangeName { get; set; }
 }

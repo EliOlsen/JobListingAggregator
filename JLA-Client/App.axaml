@@ -13,7 +13,7 @@
         <!-- Do not touch this -->
         <FluentTheme />
 
-        <!--  Some custom Styles  -->
+        <!--  Some custom Styles - mostly taken from Avalonia demo project -->
         <!--  Our header Style  -->
         <Style Selector="TextBlock.h1">
             <Setter Property="FontWeight" Value="Bold" />

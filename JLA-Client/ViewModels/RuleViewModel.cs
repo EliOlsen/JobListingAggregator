@@ -1,7 +1,7 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using JLAClient.Models;
 using JLALibrary.Models;
+using JLAClient.Models;
 
 namespace JLAClient.ViewModels;
 /// <summary>
@@ -29,22 +29,11 @@ public partial class RuleViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private TimeSpan _dailyEndTime;
-
     /// <summary>
     /// Gets or sets the request specifications object
     /// </summary>
     [ObservableProperty]
     private RequestSpecifications? _requestSpecifications;
-
-
-    /// <summary>
-    /// Creates a new blank JobListingViewModel
-    /// </summary>
-    public RuleViewModel()
-    {
-        // empty
-    }
-
     /// <summary>
     /// Creates a new RuleViewModel for the given <see cref="ScheduleRule"/>
     /// </summary>
@@ -57,7 +46,6 @@ public partial class RuleViewModel : ViewModelBase
         DailyStartTime = scheduleRule.DailyStartTime;
         DailyEndTime = scheduleRule.DailyEndTime;
         RequestSpecifications = scheduleRule.RequestSpecifications;
-
     }
     /// <summary>
     /// Gets the ScheduleRule of this ViewModel
@@ -67,11 +55,11 @@ public partial class RuleViewModel : ViewModelBase
     {
         return new ScheduleRule()
         {
-            Name = this.Name,
+            Name = this.Name!,
             Interval = this.Interval,
             DailyStartTime = this.DailyStartTime,
             DailyEndTime = this.DailyEndTime,
-            RequestSpecifications = this.RequestSpecifications
+            RequestSpecifications = this.RequestSpecifications!
         };
     }  
 }
