@@ -1,4 +1,4 @@
-namespace JLABackend.Models;
+namespace JLALibrary.Models;
 public class ParseApproach
 {
     /// <summary>
