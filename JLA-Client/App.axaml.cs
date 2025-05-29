@@ -21,6 +21,7 @@ public partial class App : Application
     private readonly MainWindowViewModel _mainViewModel = new();
     private readonly ListObjectsFileService<DisplayableJobListing> _listingsFileService = new();
     private readonly ListObjectsFileService<ScheduleRule> _rulesFileService = new();
+    private IJobRequestService? _jobRequestService;
     public override async void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -49,8 +50,12 @@ public partial class App : Application
         if (scheduledRules is not null) _mainViewModel.AppendRules(scheduledRules, false);
         //Initial periodic item save in case of computer crash
         _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));
+        //Initialize the JobRequestService (ATM always RabbitMQ)
+        _jobRequestService = new MyRabbitMQ();
+
+
         //Initialize the RabbitMQ system and pass it the rules so it knows what to automatically send out
-        await MyRabbitMQ.Initialize(_mainViewModel.AppendListings, scheduledRules, lastTimeListingsSaved, configuration);
+        await _jobRequestService.Initialize(_mainViewModel.AppendListings, scheduledRules, lastTimeListingsSaved, configuration);
         //Done with initialization
         base.OnFrameworkInitializationCompleted();
     }

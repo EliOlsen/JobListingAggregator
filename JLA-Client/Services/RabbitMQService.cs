@@ -127,7 +127,7 @@ public class RabbitMQService : IAsyncDisposable
         }
     }
 }
-public class MyRabbitMQ
+public class MyRabbitMQ : IJobRequestService
 {
     /// <summary>
     /// Initializes the RabbitMQ service with all of the values obtained from the config file.
@@ -136,7 +136,7 @@ public class MyRabbitMQ
     /// <param name="rules">The scheduleRules to initialize as repeating calls</param>
     /// <param name="lastTimeListingsSaved">The last time the job listings were saved to file, for use in single-trigger rules</param>
     /// <param name="configuration">The configuration values obtained from the config file</param>
-    public static async Task Initialize(Func<List<DisplayableJobListing>, bool, bool> ProcessingFunction, IEnumerable<ScheduleRule>? rules, DateTime? lastTimeListingsSaved, JLAClientConfiguration configuration)
+    public async Task Initialize(Func<List<DisplayableJobListing>, bool, bool> ProcessingFunction, IEnumerable<ScheduleRule>? rules, DateTime? lastTimeListingsSaved, JLAClientConfiguration configuration)
     {
         string instanceId = Guid.NewGuid().ToString();
         //Set up rabbitMQService so I can use it when needed (moved from InvokeAsync so it only happens once)

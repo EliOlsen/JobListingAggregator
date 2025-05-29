@@ -1,4 +1,5 @@
 namespace JLAClient.Models;
+
 public class JLAClientConfiguration()
 {
     /// <summary>
@@ -13,6 +14,10 @@ public class JLAClientConfiguration()
     /// Gets or sets the autosave frequency (unit = milliseconds)
     /// </summary>
     public required double AutosaveFrequencyInMilliseconds { get; set; }
+    ///<summary>
+    /// Gets or sets the boolean indicating whether RabbitMQ should be used
+    /// </summary>
+    public required bool UseRabbitMQ { get; set; }
     /// <summary>
     /// Gets or sets the queue name for use with RabbitMQ
     /// </summary>
@@ -33,4 +38,8 @@ public class JLAClientConfiguration()
     /// Gets or sets the exchange to use for sending log messages with RabbitMQ
     /// </summary>
     public required string LogExchangeName { get; set; }
+    /// <summary>
+    /// Gets or sets the user agent for HTTP requests
+    /// </summary>
+    public required string UserAgent { get; set; }
 }

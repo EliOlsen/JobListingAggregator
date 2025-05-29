@@ -15,11 +15,13 @@ public class ConfigurationFileService()
             RulesSourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Avalonia.JLAClient", "rules.json"),
             ListingsSourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Avalonia.JLAClient", "listings.json"),
             AutosaveFrequencyInMilliseconds = 900000,
+            UseRabbitMQ = true,
             QueueName = "scratchjobs_queue",
             Username = "guest", //The default RabbitMQ username upon installation of RabbitMQ - more likely to be right than a random placeholder.
             Password = "guest", //The default RabbitMQ username upon installation of RabbitMQ - more likely to be right than a random placeholder.
             HostName = "localhost",
-            LogExchangeName = "scratchjobs_log"
+            LogExchangeName = "scratchjobs_log",
+            UserAgent = "N/A"
         };
         JLAClientConfiguration settings = await new UserJsonConfiguration<JLAClientConfiguration>().RetrieveAndValidateSettings(DefaultConfiguration, configFilePath);
         return settings;
