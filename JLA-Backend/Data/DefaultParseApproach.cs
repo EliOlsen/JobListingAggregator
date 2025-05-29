@@ -1,7 +1,13 @@
 using JLABackend.Models;
 namespace JLABackend.Data;
 public class DefaultParserApproach
-{//This is where I'm going to keep the default parser approach; it might change with various maintenance updates, and in fact this is the MOST likely thing I'll need to update to keep basic functionality intact over time.
+{//This is where I'm going to keep the default parser approach; 
+ //it might change with various maintenance updates, and in fact this is the MOST likely thing I'll need to update to keep basic functionality intact over time.
+ //I considered storing it in an editable configuration file, but it would get overwritten whenever I updated the application and it doesn't seem reasonable
+ //to otherwise accomodate manual changes to a specific instance. Any changes to this should be propogated to all instances anyway.
+    /// <summary>
+    /// Provides the hardcoded dictionary of parse approaches
+    /// </summary>
     public static Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>> GetDefault()
     {
         return new Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>

@@ -1,18 +1,19 @@
 ﻿using System.Globalization;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using JLABackend.Models;
-using JLABackend.Data;
-using JLALibrary;
-using JLALibrary.Models;
+using System.Net.Http.Headers;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-
+using JLALibrary;
+using JLALibrary.Models;
+using JLABackend.Models;
+using JLABackend.Data;
 namespace JLABackend;
-
 public class JLABackend
 {
+    /// <summary>
+    /// The man function, this is the backbone of the Backend.
+    /// </summary>
     public static async Task Main()
     {
         //Before anything else: Get configuration data from config file.
@@ -32,8 +33,6 @@ public class JLABackend
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
         client.DefaultRequestHeaders.Add("User-Agent", settings.UserAgent); //Haven't decided exactly how I'm formatting this yet.
-        //HttpClient information handled. Now to set the variables that won't be changing depending on received data.
-
         //A ParseApproach is a set of parameters to feed to StringMunging.TryGetSubstring along with the input
         //A list of ParseApproach is the order in which they should be tried, flowing down to the next if the previous didn't give a valid output, and only submitting an empty string if all fail
         //A dictionary relates each list of ParseApproaches with the property they're meant for
@@ -72,7 +71,6 @@ public class JLABackend
             AsyncEventingBasicConsumer cons = (AsyncEventingBasicConsumer)sender;
             IChannel ch = cons.Channel;
             string response = string.Empty;//We default to an empty string
-
             byte[] body = ea.Body.ToArray();
             IReadOnlyBasicProperties props = ea.BasicProperties;
             var replyProps = new BasicProperties
@@ -90,8 +88,8 @@ public class JLABackend
                 RequestSpecifications? request = JsonSerializer.Deserialize<RequestSpecifications>(message);
                 if (request is not null) Enum.TryParse(request.Source, true, out jobsite);
                 //From that Jobsite, I can use a switch to perform the expected behavior. Also, so long as Jobsite isn't Error, we know Request isn't null.
-                //establish variables for use within various switch branches
-                RegionInfo regionInfo = new RegionInfo(new CultureInfo(request?.CultureInfoString is not null ? request.CultureInfoString : "en-us", false).LCID);
+                //Before that, I need to establish variables for use within various switch branches
+                RegionInfo regionInfo = new RegionInfo(new CultureInfo(request?.CultureInfoString is not null ? request.CultureInfoString : "en-US", false).LCID);
                 Dictionary<Jobsite, string> urlDictionary = new Dictionary<Jobsite, string>//Needs further refinement, but will do for now.
                 {//These are the links to the specific URLs I'll either be calling or using as placeholder listings.
                  //Not sure if I should shift these out to a data class. Probably not - proper interjection of request variables should mean the only time the actual format changes is when the URL format itself is changed, and that's something I'll have to maintain myself
@@ -101,15 +99,16 @@ public class JLABackend
                     {Jobsite.Dice, $"https://www.dice.com/platform/jobs?filters.postedDate=ONE&filters.employmentType=FULLTIME&filters.employerType=Direct+Hire&filters.workplaceTypes=Remote%7COn-Site%7CHybrid&radius={request.Radius}&countryCode={regionInfo.TwoLetterISORegionName}&latitude={request.Latitude}&location={request.City.Replace(" ", "+")}%2C+{request.StateAbbrev}%2C+{regionInfo.ThreeLetterISORegionName}&locationPrecision=City&longitude={request.Longitude}&q={request.SearchTerms.Replace(" ", "+")}&radiusUnit=mi"},
                     {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
                     {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.City.ToLower().Replace(" ", "-")}-{request.StateAbbrev.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,14_IC1142551_KO15,33.htm?maxSalary={request.MaxSalary}&minSalary={request.MinSalary}&fromAge=7"}
+                    //TODO: Some of these URLS can be further expanded to use the variables from the others, and I might just want to see if LinkedIn can function without its GeoId altogether.
                 };
                 List<GenericJobListing> listings = [];
                 //Then switch!
                 switch (jobsite)
                 {
                     case Jobsite.Error:
-                        //error - send nothing
-                        FormattedConsoleOutput.Warning("Request Jobsite enum does not parse. Returning empty list.");
-                        response = JsonSerializer.Serialize(new List<GenericJobListing>());
+                        //error - send empty string
+                        FormattedConsoleOutput.Warning("Request Jobsite enum does not parse.");
+                        response = string.Empty;
                         break;
 
                     case Jobsite.Dummy:
@@ -159,10 +158,28 @@ public class JLABackend
         Console.WriteLine(" Press [enter] to exit.");
         Console.ReadLine();
     }
+    /// <summary>
+    /// The placeholder function with a handler-compatible signature, for when I have no method of dealing with a given jobsite. 
+    /// Should go unused except for when I'm actively fixing / developing something.
+    /// </summary>
+    /// <param name="client">The HTTPClient to make calls with</param>
+    /// <param name="jobsite">The jobsite enum I'm working with at the moment</param>
+    /// <param name="url">The URL of the jobsite, pre-filled with its own parameters and ready to call</param>
+    /// <param name="parseApproachDictionary">The dictionary I'll extract my parse approach data from, for parsing the HTTP call result</param>
+    /// <param name="request">The original request object, which contains various bits of data I need to parse and format properly</param>
     static Task<List<GenericJobListing>> Placeholder(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         return Task.FromResult(new List<GenericJobListing> { });
     }
+    /// <summary>
+    /// The handler function for when I know a given jobsite won't allow my preferred approaches; 403 errors, forbidden, etc. 
+    /// This function instead crafts a placeholder singular job listing to stand in and allow the client to still access the overall search.
+    /// </summary>
+    /// <param name="client">The HTTPClient to make calls with</param>
+    /// <param name="jobsite">The jobsite enum I'm working with at the moment</param>
+    /// <param name="url">The URL of the jobsite, pre-filled with its own parameters and ready to call</param>
+    /// <param name="parseApproachDictionary">The dictionary I'll extract my parse approach data from, for parsing the HTTP call result</param>
+    /// <param name="request">The original request object, which contains various bits of data I need to parse and format properly</param>
     static Task<List<GenericJobListing>> GenerateProxyListing(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         List<GenericJobListing> output = [];
@@ -179,6 +196,15 @@ public class JLABackend
         );
         return Task.FromResult(output);
     }
+    /// <summary>
+    /// The handler function for polling and parsing a jobsite's html for job listings.
+    /// Specifically, this considers and parses a single page of said response.
+    /// </summary>
+    /// <param name="client">The HTTPClient to make calls with</param>
+    /// <param name="jobsite">The jobsite enum I'm working with at the moment</param>
+    /// <param name="url">The URL of the jobsite, pre-filled with its own parameters and ready to call</param>
+    /// <param name="parseApproachDictionary">The dictionary I'll extract my parse approach data from, for parsing the HTTP call result</param>
+    /// <param name="request">The original request object, which contains various bits of data I need to parse and format properly</param>
     static async Task<List<GenericJobListing>> PollAndParseJobSiteForListings(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {
         //Ensure that passed parameters are usable, before doing anything else.
@@ -222,7 +248,7 @@ public class JLABackend
             //Fourth step, filter listing based on request specifications beyond what is in the URL
             DateTime theoreticalJobPostTime = PostDateTimeEstimateFromVagueString(job.PostDateTime);
             job.PostDateTime = theoreticalJobPostTime.ToString();//Doing this in line was, honestly, a bunch of unnecessary conversions
-            TimeSpan gracePeriod = new(1, 0, 0);// In an ideal world this would be 0, but right now I want it high to I trend toward seeing mistakes, not missing mistakes.
+            TimeSpan gracePeriod = new(1, 0, 0);// In an ideal world this would be 0, but right now I want it high to trend toward seeing mistakes, not missing mistakes.
             if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms)
             && Array.IndexOf(request.CompanyFilterTerms, job.Company) == -1
             && DateTime.Compare(theoreticalJobPostTime.Add(gracePeriod), request.CutoffTime) >= 0)
@@ -232,6 +258,16 @@ public class JLABackend
         }
         return output;
     }
+    /// <summary>
+    /// The handler function for polling and parsing a jobsite's html for job listings.
+    /// Specifically, this considers and parses a multiple pages, if the response indicates them.
+    /// Currently only supports Dice.
+    /// </summary>
+    /// <param name="client">The HTTPClient to make calls with</param>
+    /// <param name="jobsite">The jobsite enum I'm working with at the moment</param>
+    /// <param name="url">The URL of the jobsite, pre-filled with its own parameters and ready to call</param>
+    /// <param name="parseApproachDictionary">The dictionary I'll extract my parse approach data from, for parsing the HTTP call result</param>
+    /// <param name="request">The original request object, which contains various bits of data I need to parse and format properly</param>
     static async Task<List<GenericJobListing>> DicePaginatedPollAndParseJobSiteForListings(HttpClient client, Jobsite jobsite, string url, Dictionary<string, List<ParseApproach>> parseApproachDictionary, RequestSpecifications request)
     {//I'll fully genericize this later; LinkedIn and BuiltIn theoretically have multiple pages, but unlike Dice don't have the frequency of new listings to absolutely require parsing more than the first page...
         Random rnd = new Random();
@@ -249,6 +285,13 @@ public class JLABackend
         }
         return output;
     }
+    /// <summary>
+    /// Runs through the given parseApproaches taken from the dictionary
+    /// </summary>
+    /// <param name="input">The input string to parse</param>
+    /// <param name="propertyName">The name of the property we're trying to parse a value for</param>
+    /// <param name="fallback">The string to return if every parse approach fails</param>
+    /// <param name="parseApproachDictionary">The dictionary of parse approaches for a specific jobsite</param>
     private static string TryParseList(string input, string propertyName, string fallback, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
     {
         if (!parseApproachDictionary.TryGetValue(propertyName, out List<ParseApproach>? value))
@@ -264,11 +307,15 @@ public class JLABackend
             if (output != string.Empty) break;
         }
         if (output == string.Empty) FormattedConsoleOutput.Warning("All parse approaches failed for " + propertyName);
-        output = Uri.UnescapeDataString(output); //Some of the sites use URI encoding for some reason; I'm getting rid of that here.
+        output = Uri.UnescapeDataString(output); //Some of the sites use URI encoding; I'm getting rid of that here.
         return output != string.Empty ? output : fallback;
     }
+    /// <summary>
+    /// Takes a string that is in no way consistently formatted, and pulls the lowest common denominator of relative time information out of it
+    /// </summary>
+    /// <param name="postDateTime">The input string to parse</param>
     private static DateTime PostDateTimeEstimateFromVagueString(string postDateTime)
-    {//Different sites have different formats, and absolutely none of them are very specific. This logic matches them as accurately as the lowest common denominator allows.
+    {
         int hoursAgo = 0;
         int minutesAgo = 0;
         if (postDateTime.Contains("hour", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 1;
@@ -279,6 +326,5 @@ public class JLABackend
         else if (postDateTime.Contains("month", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30;
         else if (postDateTime.Contains("year", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30 * 12;
         return DateTime.Now.Subtract(new TimeSpan(hoursAgo, minutesAgo, 0));
-    }
-    
+    } 
 }
