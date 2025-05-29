@@ -1,20 +1,190 @@
-<Window xmlns="https://github.com/avaloniaui"
+<Window MinWidth="500" MinHeight="900" 
+        xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:JLA_Client.ViewModels"
+        xmlns:vm="using:JLAClient.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="JLA_Client.Views.MainWindow"
+        xmlns:conv="clr-namespace:JLAClient.Converters"
+        mc:Ignorable="d"
+        Width="500" Height="900" Padding="4"
+        x:Class="JLAClient.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="JLA_Client">
-
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
+        Title="JLAClient">
+        <!--See expand-scrollviewer commments further down for why minwidth and minheight are set as they are-->
+    <Window.Resources>
+        <conv:StringArrayToString x:Key="stringArrayToString"/>
+    </Window.Resources>
+    <TabControl>
+        <TabItem Header="Job Listings">
+            <Grid RowDefinitions="Auto, *" ShowGridLines = "false" x:Name="Root">
+                <StackPanel Orientation = "Vertical" Grid.Row = "0">
+                    <StackPanel Orientation = "Vertical" HorizontalAlignment="Center">
+                        <TextBlock Classes="h1" Text="Job Listings" TextAlignment="Center"/>
+                        <TextBlock TextAlignment="Center" Text="{Binding Listings.Count, StringFormat='{}{0} currently on display'}"/>
+                    </StackPanel>
+                    <Button Command="{Binding ClearListingsCommand}" CommandParameter="{Binding .}">
+                        Delete All
+                    </Button>
+                </StackPanel>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding Listings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:ListingViewModel">
+                                <Border BorderThickness="2" BorderBrush="DarkCyan" CornerRadius="4" Padding="10,0,0,0" Margin="10,10,30,10">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <StackPanel>
+                                            <CheckBox Content="{Binding Listing.Title}" IsChecked="{Binding HasBeenViewed}"/>
+                                            <TextBlock Text="{Binding Listing.PostDateTime}"/>
+                                            <TextBlock Text="{Binding Listing.Company}"/>
+                                            <TextBlock Text="{Binding Listing.Location}"/>
+                                            <TextBlock Text="{Binding Listing.JobsiteId}"/>
+                                            <HyperlinkButton Content="Go To Listing" NavigateUri="{Binding Listing.LinkToJobListing}"/>
+                                        </StackPanel>
+                                        <Button Command="{Binding #Root.((vm:MainWindowViewModel)DataContext).RemoveListingCommand}"
+                                                CommandParameter="{Binding .}"
+                                                Background="DarkCyan"
+                                                VerticalContentAlignment="Center"
+                                                Content="Content Center"
+                                                VerticalAlignment="Stretch"
+                                                Grid.Column="1">
+                                            Delete
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Schedule">
+            <Grid RowDefinitions="Auto, *, Auto" ShowGridLines = "false" x:Name="ConfigRoot">
+                <StackPanel Orientation = "Vertical" Grid.Row = "0">
+                    <StackPanel Orientation = "Vertical" HorizontalAlignment="Center">
+                        <TextBlock Classes="h1" Text="Scheduled Rules" TextAlignment="Center"/>
+                        <TextBlock TextAlignment="Center" Text="{Binding Rules.Count, StringFormat='{}{0} currently loaded'}"/>
+                        <TextBlock TextAlignment="Center" Text="(Changes require restart to take effect)"/>
+                    </StackPanel>
+                    <Button Command="{Binding ClearRulesCommand}" CommandParameter="{Binding .}">
+                        Delete All
+                    </Button>
+                </StackPanel>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding Rules}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:RuleViewModel">
+                                <Border BorderThickness="2" BorderBrush="DarkOliveGreen" CornerRadius="4" Padding="0,0,0,0" Margin="10,10,30,10">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <Button Command="{Binding #ConfigRoot.((vm:MainWindowViewModel)DataContext).ImportRuleToFormCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Grid.Column="0"
+                                            Margin="0,0,3,0"
+                                            Background="DarkOliveGreen"
+                                            VerticalContentAlignment="Center"
+                                            Content="Content Center"
+                                            VerticalAlignment="Stretch">
+                                            Edit
+                                        </Button>
+                                        <StackPanel Grid.Column="1" Margin="0,5,0,5">
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding Name}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding Interval, StringFormat='Interval: {0} seconds'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding DailyStartTime, StringFormat='Daily Start Time: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding DailyEndTime, StringFormat='Daily End Time: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.Source, StringFormat='Source: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.IsRemote, StringFormat='Is Remote: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.Radius, StringFormat='Search Radius (mi): {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.SearchTerms, StringFormat='Search Terms: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.City, StringFormat='City: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.State, StringFormat='State: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.StateAbbrev, StringFormat='State Abbreviation: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.CompanyFilterTerms, Converter={StaticResource stringArrayToString}, StringFormat='Company Exclusions: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.TitleFilterTerms, Converter={StaticResource stringArrayToString}, StringFormat='Job Title Keyword Exclusions: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.MinSalary, StringFormat='Minimum Salary: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.MaxSalary, StringFormat='Maximum Salary: {0}'}"/>
+                                            <TextBlock TextWrapping="Wrap" Text="{Binding RequestSpecifications.BuiltInJobCategory, StringFormat='BuiltIn Job Category: {0}'}"/>  
+                                        </StackPanel>
+                                        <Button Command="{Binding #ConfigRoot.((vm:MainWindowViewModel)DataContext).RemoveRuleCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Grid.Column="2"
+                                            Margin="15,0,0,0"
+                                            Background="DarkOliveGreen"
+                                            VerticalContentAlignment="Center"
+                                            Content="Content Center"
+                                            VerticalAlignment="Stretch">
+                                            Delete
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <Expander VerticalAlignment="Bottom" Grid.Row="2" IsExpanded="{Binding IsRuleEditorExpanded}" HorizontalAlignment="Stretch">
+                    <Expander.Header>
+                        Add / Update Rules
+                    </Expander.Header>
+                    <Border Height="700"> 
+                        <!--Scrollviewer has to be inside something with a set height, and that thing must be long enough to need scrolling-->
+                        <!--Resizing the content (expanding a list, for instance) works as expected, but putting it inside an expand breaks that-->
+                        <!--This causes issues; if I don't have an active ScrollViewer, I have to limit the total window height such that it doesn't cut off the bottom of the expand-->
+                        <!--If I DO have a scroll, I still have to limit it, but I can make it much smaller, at the expense that it must always scroll-->
+                        <!--Best always-scroll height: 400, limit 600. A good never-scroll height: 700, limit 900 (no need to remove scrollviewer element for this)-->
+                    <ScrollViewer>
+                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ShowGridLines="false">
+                        <TextBlock Text="Name: " Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleName}" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Interval (seconds): " Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleInterval}" Grid.Row="1" Grid.Column="1" Increment="1" FormatString="0" Minimum="0" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Daily Start Time: " Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" Grid.Row="2" Grid.Column="1" SelectedTime="{Binding NewRuleDailyStartTime}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Daily End Time: " Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TimePicker ClockIdentifier="24HourClock" MinuteIncrement="5" Grid.Row="3" Grid.Column="1" SelectedTime="{Binding NewRuleDailyEndTime}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Job Listing Source: " Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding AcceptedSources}" SelectedValue="{Binding NewRuleSource}" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Text="Remote: " Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <CheckBox IsChecked="{Binding NewRuleIsRemote}" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Radius (mi): " Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleRadius}" Grid.Row="6" Grid.Column="1" Increment="1" FormatString="0" Minimum="1" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Search Terms: " Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleSearchTerms}" Grid.Row="7" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Cultural (eg 'en-US'): " Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleCulture}" Grid.Row="8" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="City: " Grid.Row="9" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleCity}" Grid.Row="9" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="State: " Grid.Row="10" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleState}" Grid.Row="10" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="State Abbreviation: " Grid.Row="11" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleStateAbbrev}" Grid.Row="11" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Latitude: " Grid.Row="12" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleLatitudeString}" Grid.Row="12" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Longitude: " Grid.Row="13" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleLongitudeString}" Grid.Row="13" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="GeoId: " Grid.Row="14" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleGeoId}" Grid.Row="14" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Minimum Salary ($/yr): " Grid.Row="15" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleMinSalary}" Grid.Row="15" Grid.Column="1" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Maximum Salary ($/yr): " Grid.Row="16" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <NumericUpDown Value="{Binding NewRuleMaxSalary}" Grid.Row="16" Grid.Column="1" Increment="1000" FormatString="0,000" Minimum="0" AllowSpin="false" ShowButtonSpinner="false" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="BuiltIn Job Category: " Grid.Row="17" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleJobCategory}" Grid.Row="17" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Job Title Keyword Filters: " Grid.Row="18" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleTitleFilterArrayString}" Grid.Row="18" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Job Company Filters: " Grid.Row="19" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBox Text = "{Binding NewRuleCompanyFilterArrayString}" Grid.Row="19" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <Button Command="{Binding ClearFormCommand}" Grid.Row="20" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left">Clear</Button>
+                        <Button Command="{Binding AddOrUpdateRuleCommand}" Grid.Row="20" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">Add / Update</Button>
+                    </Grid>
+                    </ScrollViewer>
+                    </Border>
+                </Expander>
+            </Grid>
+        </TabItem>
+    </TabControl>
 </Window>

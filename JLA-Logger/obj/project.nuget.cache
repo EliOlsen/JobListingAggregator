@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "C7maPwrU0VgrxpH5a8OCpsplM5PLcVfVWbyPIj/RKV/pmsRy85Jzpeeo3XZ1fkbzyZjz75mKZ6mDP3cpVc4puw==",
+  "dgSpecHash": "PV/oLqaBgGLYjYzs3GKXJ6z+vgfhOq7BZaGk4ARYmQLvc79tULpVUCS/FiKsNrCZMLOGYPdImeGoBDl9hFxq6A==",
   "success": true,
   "projectFilePath": "/home/eliolsen/Documents/C#Work/JobListingAggregator/JobListingAggregator/JLA-Logger/JLA-Logger.csproj",
   "expectedPackageFiles": [
     "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration/9.0.5/microsoft.extensions.configuration.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration.abstractions/9.0.5/microsoft.extensions.configuration.abstractions.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration.binder/9.0.5/microsoft.extensions.configuration.binder.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration.fileextensions/9.0.5/microsoft.extensions.configuration.fileextensions.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/microsoft.extensions.configuration.json/9.0.5/microsoft.extensions.configuration.json.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/microsoft.extensions.fileproviders.abstractions/9.0.5/microsoft.extensions.fileproviders.abstractions.9.0.5.nupkg.sha512",

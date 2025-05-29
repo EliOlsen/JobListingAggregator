@@ -399,3 +399,9 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+#User Configuration Files
+config.json
+
+#Logger logs
+**/*_log.txt

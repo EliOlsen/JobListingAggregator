@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace JLA_Client.Views;
+namespace JLAClient.Views;
 
 public partial class MainWindow : Window
 {
