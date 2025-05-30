@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "fBU8YrO2zhvNYd+QczSRViNQKuMHa/9ahMzrk+nmZ0lQcFNQJ5yQok8eDRWt59+XiktlDRL98kJwiwWfwXO+kA==",
+  "dgSpecHash": "GhhPDFVa+v3QhuptKZSZ4m+yjD/s1tB52PRQpon48g6RLNf6S5iXO1IEBHiQ7nNO1VxXEpAY9ahdfrTOafz7jA==",
   "success": true,
   "projectFilePath": "/home/eliolsen/Documents/C#Work/JobListingAggregator/JobListingAggregator/JLA-Backend/JLA-Backend.csproj",
   "expectedPackageFiles": [
@@ -13,11 +13,15 @@
     "/home/eliolsen/.nuget/packages/microsoft.extensions.fileproviders.physical/9.0.5/microsoft.extensions.fileproviders.physical.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/microsoft.extensions.filesystemglobbing/9.0.5/microsoft.extensions.filesystemglobbing.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/microsoft.extensions.primitives/9.0.5/microsoft.extensions.primitives.9.0.5.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.net.illink.tasks/8.0.16/microsoft.net.illink.tasks.8.0.16.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/rabbitmq.client/7.1.2/rabbitmq.client.7.1.2.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/system.io.pipelines/9.0.5/system.io.pipelines.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/system.text.encodings.web/9.0.5/system.text.encodings.web.9.0.5.nupkg.sha512",
     "/home/eliolsen/.nuget/packages/system.text.json/9.0.5/system.text.json.9.0.5.nupkg.sha512",
-    "/home/eliolsen/.nuget/packages/system.threading.ratelimiting/8.0.0/system.threading.ratelimiting.8.0.0.nupkg.sha512"
+    "/home/eliolsen/.nuget/packages/system.threading.ratelimiting/8.0.0/system.threading.ratelimiting.8.0.0.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.netcore.app.runtime.win-x64/8.0.16/microsoft.netcore.app.runtime.win-x64.8.0.16.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.aspnetcore.app.runtime.win-x64/8.0.16/microsoft.aspnetcore.app.runtime.win-x64.8.0.16.nupkg.sha512",
+    "/home/eliolsen/.nuget/packages/microsoft.netcore.app.host.win-x64/8.0.16/microsoft.netcore.app.host.win-x64.8.0.16.nupkg.sha512"
   ],
   "logs": []
 }
