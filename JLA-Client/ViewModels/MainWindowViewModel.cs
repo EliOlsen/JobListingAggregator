@@ -147,18 +147,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
     private string? _newRuleStateAbbrev; //TODO: Remove this from visibility outright, and grab it via dictionary from the state variable.
     /// <summary>
-    /// Gets or set the Longitude for a new rule. If this string is not null and parses to a valid decimal, the AddOrUpdateRuleCommand will be enabled automatically
-    /// </summary>
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleLongitudeString; //TODO: Remove from visibility outright. Grab from a third party API using city and state variables?
-    /// <summary>
-    /// Gets or set the Latitude for a new rule. If this string is not null and parses to a valid decimal, the AddOrUpdateRuleCommand will be enabled automatically
-    /// </summary>
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))] // This attribute will invalidate the command each time this property changes
-    private string? _newRuleLatitudeString; //TODO: Remove from visibility outright. Grab from a third party API using city and state variables?
-    /// <summary>
     /// Gets or set the LinkedIn GeoId for a new rule. If this string is not null, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
     [ObservableProperty]
@@ -223,12 +211,6 @@ public partial class MainWindowViewModel : ViewModelBase
         //State Abbreviation validation
         && !string.IsNullOrWhiteSpace(NewRuleStateAbbrev)
         && NewRuleStateAbbrev.Length == 2
-        //Longitude string validation
-        && !string.IsNullOrWhiteSpace(NewRuleLongitudeString)
-        && decimal.TryParse(NewRuleLongitudeString, out _)
-        //Latitude string validation
-        && !string.IsNullOrWhiteSpace(NewRuleLatitudeString)
-        && decimal.TryParse(NewRuleLatitudeString, out _)
         //GeoId string validation
         && !string.IsNullOrWhiteSpace(NewRuleGeoId)
         //Min Salary validation
@@ -263,8 +245,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 City = NewRuleCity!,
                 State = NewRuleState!,
                 StateAbbrev = NewRuleStateAbbrev!,
-                Longitude = NewRuleLongitudeString!,
-                Latitude = NewRuleLatitudeString!,
                 GeoId = NewRuleGeoId!,
                 MaxSalary = decimal.ToInt32(NewRuleMaxSalary ?? decimal.Zero),
                 MinSalary = decimal.ToInt32(NewRuleMinSalary ?? decimal.Zero),
@@ -305,8 +285,6 @@ public partial class MainWindowViewModel : ViewModelBase
         NewRuleCity = rule.RequestSpecifications!.City;
         NewRuleState = rule.RequestSpecifications!.State;
         NewRuleStateAbbrev = rule.RequestSpecifications!.StateAbbrev;
-        NewRuleLongitudeString = rule.RequestSpecifications!.Longitude;
-        NewRuleLatitudeString = rule.RequestSpecifications!.Latitude;
         NewRuleGeoId = rule.RequestSpecifications!.GeoId;
         NewRuleMaxSalary = rule.RequestSpecifications!.MaxSalary;
         NewRuleMinSalary = rule.RequestSpecifications!.MinSalary;
@@ -334,8 +312,6 @@ public partial class MainWindowViewModel : ViewModelBase
         NewRuleCity = null;
         NewRuleState = null;
         NewRuleStateAbbrev = null;
-        NewRuleLongitudeString = null;
-        NewRuleLatitudeString = null;
         NewRuleGeoId = null;
         NewRuleMaxSalary = null;
         NewRuleMinSalary = null;

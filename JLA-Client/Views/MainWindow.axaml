@@ -162,10 +162,6 @@
                         <TextBox Text = "{Binding NewRuleState}" Grid.Row="10" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBlock Text="State Abbreviation: " Grid.Row="11" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBox Text = "{Binding NewRuleStateAbbrev}" Grid.Row="11" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <TextBlock Text="Latitude: " Grid.Row="12" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <TextBox Text = "{Binding NewRuleLatitudeString}" Grid.Row="12" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <TextBlock Text="Longitude: " Grid.Row="13" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <TextBox Text = "{Binding NewRuleLongitudeString}" Grid.Row="13" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBlock Text="GeoId: " Grid.Row="14" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBox Text = "{Binding NewRuleGeoId}" Grid.Row="14" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBlock Text="Minimum Salary ($/yr): " Grid.Row="15" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>

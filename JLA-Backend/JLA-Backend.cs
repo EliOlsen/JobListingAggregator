@@ -53,6 +53,7 @@ public class JLABackend
         //Now, to set up the receivedAsync logic
         consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs ea) =>
         {
+            //Set up RabbitMQ consumer, channel, etc, and prepare data
             AsyncEventingBasicConsumer cons = (AsyncEventingBasicConsumer)sender;
             IChannel ch = cons.Channel;
             byte[] body = ea.Body.ToArray();
@@ -65,7 +66,7 @@ public class JLABackend
             message = Encoding.UTF8.GetString(body);
             RequestSpecifications? request = JsonSerializer.Deserialize<RequestSpecifications>(message);
             await RMQLog.LogAsync(routingKeyBase + ".info", "Request received by Backend for data from source: " + Encoding.UTF8.GetString(body), instanceId, channel, settings.LogExchangeName);
-            List<GenericJobListing> response = await HTTPHandlers.ReceivedAsyncJobRequest(request, client);
+            List<GenericJobListing> response = await HTTPHandlers.ReceivedAsyncJobRequest(request, client); //Here's where I call the actual bulk of the function
             byte[]? responseBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response));
             await ch.BasicPublishAsync(exchange: string.Empty, routingKey: props.ReplyTo!, mandatory: true, basicProperties: replyProps, body: responseBytes);
             await ch.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);

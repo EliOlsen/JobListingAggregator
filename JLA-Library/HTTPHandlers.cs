@@ -91,13 +91,17 @@ public static class HTTPHandlers
                 PostDateTime = StringMunging.TryParseList(listing, "PostDateTime", fallback, parseApproachDictionary),
                 LinkToJobListing = StringMunging.TryParseList(listing, "LinkToJobListing", fallback, parseApproachDictionary),
             };
+            //Potentially temporary warning:
+            bool linkedInInconsistentcensor = job.Title.Contains("***");//Not sure if this is an anti-bot measure or something breaking... If it were anti-bot wouldn't it happen to all listings in a given search? Only seems to happen when I remove GeoId?
+            if (linkedInInconsistentcensor) FormattedConsoleOutput.Debug("LinkedIn broken listing detected");
             //Fourth step, filter listing based on request specifications beyond what is in the URL
             DateTime theoreticalJobPostTime = StringMunging.PostDateTimeEstimateFromVagueString(job.PostDateTime);
             job.PostDateTime = theoreticalJobPostTime.ToString();//Doing this in line was, honestly, a bunch of unnecessary conversions
             TimeSpan gracePeriod = new(1, 0, 0);// In an ideal world this would be 0, but right now I want it high to trend toward seeing mistakes, not missing mistakes.
             if (StringMunging.StringContainsNoneOfSubstringsInArray(job.Title, request.TitleFilterTerms)
             && Array.IndexOf(request.CompanyFilterTerms, job.Company) == -1
-            && DateTime.Compare(theoreticalJobPostTime.Add(gracePeriod), request.CutoffTime) >= 0)
+            && DateTime.Compare(theoreticalJobPostTime.Add(gracePeriod), request.CutoffTime) >= 0
+            && !linkedInInconsistentcensor)
             {
                 output.Add(job);
             }
@@ -156,9 +160,9 @@ public static class HTTPHandlers
                 {//These are the links to the specific URLs I'll either be calling or using as placeholder listings.
                  //Not sure if I should shift these out to a data class. Probably not - proper interjection of request variables should mean the only time the actual format changes is when the URL format itself is changed, and that's something I'll have to maintain myself
                  //Note: Location is, uh, a crapshoot. Everything from city (easy) to 'geoid', which, what? I can obtain my own, personal location values by the same method I obtained these URLs, but that's a black box for the geoid.
-                    {Jobsite.LinkedIn, $"https://www.linkedin.com/jobs/search/?distance={request!.Radius}&f_E=2%2C3&f_TPR=r86400&geoId={request.GeoId}&keywords={request.SearchTerms.Replace(" ", "%20")}&origin=JOB_SEARCH_PAGE_JOB_FILTER" },
+                    {Jobsite.LinkedIn, $"https://www.linkedin.com/jobs/search/?distance={request!.Radius}&f_E=2%2C3&f_TPR=r86400&geoId={request.GeoId}&keywords={request.SearchTerms.Replace(" ", "%20")}&origin=JOB_SEARCH_PAGE_JOB_FILTER" },//Note: Theoretically can replace the geoid with city, state, county, and it works - sort of. Not as well. LinkedIn doesn't seem to like it.
                     {Jobsite.BuiltIn, $"https://builtin.com/jobs/remote/hybrid/office/{request.BuiltInJobCategory}/entry-level?search={request.SearchTerms.Replace(" ", "%20")}&daysSinceUpdated=1&city={request.City.Replace(" ", "%20")}&state={request.State.Replace(" ", "%20")}&country={regionInfo.ThreeLetterISORegionName}"},
-                    {Jobsite.Dice, $"https://www.dice.com/platform/jobs?filters.postedDate=ONE&filters.employmentType=FULLTIME&filters.employerType=Direct+Hire&filters.workplaceTypes=Remote%7COn-Site%7CHybrid&radius={request.Radius}&countryCode={regionInfo.TwoLetterISORegionName}&latitude={request.Latitude}&location={request.City.Replace(" ", "+")}%2C+{request.StateAbbrev}%2C+{regionInfo.ThreeLetterISORegionName}&locationPrecision=City&longitude={request.Longitude}&q={request.SearchTerms.Replace(" ", "+")}&radiusUnit=mi"},
+                    {Jobsite.Dice, $"https://www.dice.com/platform/jobs?filters.postedDate=ONE&filters.employmentType=FULLTIME&filters.employerType=Direct+Hire&filters.workplaceTypes=Remote%7COn-Site%7CHybrid&radius={request.Radius}&countryCode={regionInfo.TwoLetterISORegionName}&location={request.City.Replace(" ", "+")}%2C+{request.StateAbbrev}%2C+{regionInfo.ThreeLetterISORegionName}&locationPrecision=City&q={request.SearchTerms.Replace(" ", "+")}&radiusUnit=mi"},
                     {Jobsite.Indeed, $"https://www.indeed.com/jobs?q={request.SearchTerms.Replace(" ", "+")}&l={request.City.ToLower().Replace(" ", "+")}%2C+{request.StateAbbrev.ToLower()}&sc=0kf%3Aexplvl%28ENTRY_LEVEL%29%3B&fromage=1&vjk=53ed07a6128717ad"},
                     {Jobsite.Glassdoor, $"https://www.glassdoor.com/Job/{request.City.ToLower().Replace(" ", "-")}-{request.StateAbbrev.ToLower().Replace(" ", "-")}-{request.SearchTerms.Replace(" ", "-")}-jobs-SRCH_IL.0,14_IC1142551_KO15,33.htm?maxSalary={request.MaxSalary}&minSalary={request.MinSalary}&fromAge=7"}
                     //TODO: Some of these URLS can be further expanded to use the variables from the others, and I might just want to see if LinkedIn can function without its GeoId altogether.
