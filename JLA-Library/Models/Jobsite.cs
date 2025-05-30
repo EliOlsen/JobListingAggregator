@@ -4,12 +4,12 @@ namespace JLALibrary.Models;
 /// </summary>
 public enum Jobsite
 {
-    LinkedIn,
-    BuiltIn,
-    Indeed,
-    Glassdoor,
-    Dice,
-    Dummy,
     All,
+    BuiltIn,
+    Dice,
+    Glassdoor,
+    Indeed,
+    LinkedIn,
+    Dummy,
     Error
 }

@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JLAClient.Models;
 using JLAClient.Converters;
+using JLALibrary.Models;
 namespace JLAClient.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
@@ -100,10 +101,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(AddOrUpdateRuleCommand))]
     private string? _newRuleSource;
     /// <summary>
-    /// Hardcoded list of acceptable source strings, for use in the dropdown.
+    /// List of acceptable jobsite source strings (taken from jobsite enum), for use in the dropdown.
     /// </summary>
     [ObservableProperty]
-    private string[] _acceptedSources = ["dummy", "all", "linkedin", "builtin", "dice", "glassdoor", "indeed"];//TODO: Create this array programatically off of the Jobsite Enum (minus the error option), which will live in JLA-Library
+    private string[] _acceptedSources = [.. Enum.GetNames(typeof(Jobsite)).Where(x => x != "Error")];
     /// <summary>
     /// Gets or set the radius for a new rule. If this Decimal is not null and positive, the AddOrUpdateRuleCommand will be enabled automatically
     /// </summary>
