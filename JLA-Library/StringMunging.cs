@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
+using JLALibrary.Models;
 namespace JLALibrary;
+
 public static class StringMunging
 {
     /// <summary>
@@ -91,5 +93,47 @@ public static class StringMunging
             }
         }
         return true; //If we've gotten this far, we know our string does not contain any of the substrings as complete words.
+    }
+    /// <summary>
+    /// Takes a string that is in no way consistently formatted, and pulls the lowest common denominator of relative time information out of it
+    /// </summary>
+    /// <param name="postDateTime">The input string to parse</param>
+    public static DateTime PostDateTimeEstimateFromVagueString(string postDateTime)
+    {
+        int hoursAgo = 0;
+        int minutesAgo = 0;
+        if (postDateTime.Contains("hour", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 1;
+        else if (postDateTime.Contains("minute", StringComparison.CurrentCultureIgnoreCase)) minutesAgo = 1;
+        else if (postDateTime.Contains("today", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 0;
+        else if (postDateTime.Contains("day", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24;
+        else if (postDateTime.Contains("week", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7;
+        else if (postDateTime.Contains("month", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30;
+        else if (postDateTime.Contains("year", StringComparison.CurrentCultureIgnoreCase)) hoursAgo = 24 * 7 * 30 * 12;
+        return DateTime.Now.Subtract(new TimeSpan(hoursAgo, minutesAgo, 0));
+    } 
+    /// <summary>
+    /// Runs through the given parseApproaches taken from the dictionary
+    /// </summary>
+    /// <param name="input">The input string to parse</param>
+    /// <param name="propertyName">The name of the property we're trying to parse a value for</param>
+    /// <param name="fallback">The string to return if every parse approach fails</param>
+    /// <param name="parseApproachDictionary">The dictionary of parse approaches for a specific jobsite</param>
+    public static string TryParseList(string input, string propertyName, string fallback, Dictionary<string, List<ParseApproach>> parseApproachDictionary)
+    {
+        if (!parseApproachDictionary.TryGetValue(propertyName, out List<ParseApproach>? value))
+        {
+            return fallback;
+        }
+        string output = string.Empty;
+        for (int i = 0; i < value.Count; i++)
+        {
+            //iterate through parse approaches; stop when one works.
+            ParseApproach currentApproach = value[i];
+            output = StringMunging.TryGetSubString(input, currentApproach.PreSubstring, currentApproach.PostSubstring, currentApproach.KeepPreSubstring, currentApproach.KeepPostSubstring);
+            if (output != string.Empty) break;
+        }
+        if (output == string.Empty) FormattedConsoleOutput.Warning("All parse approaches failed for " + propertyName);
+        output = Uri.UnescapeDataString(output); //Some of the sites use URI encoding; I'm getting rid of that here.
+        return output != string.Empty ? output : fallback;
     }
 }

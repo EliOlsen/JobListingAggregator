@@ -2,8 +2,6 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JLA-Unified", "JLA-Unified\JLA-Unified.csproj", "{24164A5E-E6D7-5856-DFD1-2186A14C579E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JLA-Client", "JLA-Client\JLA-Client.csproj", "{AFB6201B-28E6-7B0B-C35D-DBAC004064F0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JLA-Backend", "JLA-Backend\JLA-Backend.csproj", "{F12F770B-88F1-B92D-315E-427382FE26B1}"

@@ -1,5 +1,5 @@
-using JLABackend.Models;
-namespace JLABackend.Data;
+using JLALibrary.Models;
+namespace JLALibrary.Data;
 public class DefaultParserApproach
 {//This is where I'm going to keep the default parser approach; 
  //it might change with various maintenance updates, and in fact this is the MOST likely thing I'll need to update to keep basic functionality intact over time.
@@ -8,7 +8,7 @@ public class DefaultParserApproach
     /// <summary>
     /// Provides the hardcoded dictionary of parse approaches
     /// </summary>
-    public static Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>> GetDefault()
+    public static Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>> GetData()
     {
         return new Dictionary<Jobsite, Dictionary<string, List<ParseApproach>>>
                 {

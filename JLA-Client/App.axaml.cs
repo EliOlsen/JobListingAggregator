@@ -10,6 +10,7 @@ using JLAClient.ViewModels;
 using JLAClient.Views;
 using JLAClient.Services;
 using JLAClient.Models;
+using JLAClient.Interfaces;
 namespace JLAClient;
 public partial class App : Application
 {
@@ -21,6 +22,7 @@ public partial class App : Application
     private readonly MainWindowViewModel _mainViewModel = new();
     private readonly ListObjectsFileService<DisplayableJobListing> _listingsFileService = new();
     private readonly ListObjectsFileService<ScheduleRule> _rulesFileService = new();
+    private IJobRequestService? _jobRequestService;
     public override async void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -49,8 +51,11 @@ public partial class App : Application
         if (scheduledRules is not null) _mainViewModel.AppendRules(scheduledRules, false);
         //Initial periodic item save in case of computer crash
         _ = Task.Run(() => RecurringSaveToFile(TimeSpan.FromMilliseconds(configuration.AutosaveFrequencyInMilliseconds)));
-        //Initialize the RabbitMQ system and pass it the rules so it knows what to automatically send out
-        await MyRabbitMQ.Initialize(_mainViewModel.AppendListings, scheduledRules, lastTimeListingsSaved, configuration);
+        //Initialize the JobRequestService based on config value
+        if (configuration.UseRabbitMQ) _jobRequestService = new MyRabbitMQ();
+        else _jobRequestService = new HTTPRequestService();
+        //Initialize the job request system and pass it the rules so it knows what to automatically send out
+        await _jobRequestService.Initialize(_mainViewModel.AppendListings, scheduledRules, lastTimeListingsSaved, configuration);
         //Done with initialization
         base.OnFrameworkInitializationCompleted();
     }
