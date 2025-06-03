@@ -90,7 +90,6 @@ public static class StringMunging
             {
                 int occurence = input.IndexOf(trimmedSubstring);
                 Regex reg = new((occurence == 0 ? "^" : "[^\\w]") + trimmedSubstring + (occurence + trimmedSubstring.Length == input.Length ? "$" : "[^\\w]"));
-                FormattedConsoleOutput.Debug("Input: " + input + ", regex = " + reg + ". Match = " + reg.IsMatch(input));
                 if (reg.IsMatch(input)) return false; //If we match our regex, then the string does contain at least one of our substrings, so our answer is false.
             }
         }
