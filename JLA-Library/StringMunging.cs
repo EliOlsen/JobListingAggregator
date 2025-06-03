@@ -85,10 +85,12 @@ public static class StringMunging
     {//This is a LITTLE more complicated than it appears; assume the substrings are all complete words, don't disqualify for word fragments that match, only full words.
         foreach (string substring in substrings)
         {
-            if (input.Contains(substring))
+            string trimmedSubstring = substring.Trim();
+            if (input.Contains(trimmedSubstring))
             {
-                int occurence = input.IndexOf(substring);
-                Regex reg = new((occurence == 0 ? "" : "\\W") + substring + (occurence + substring.Length == input.Length ? "" : "\\W"));
+                int occurence = input.IndexOf(trimmedSubstring);
+                Regex reg = new((occurence == 0 ? "^" : "[^\\w]") + trimmedSubstring + (occurence + trimmedSubstring.Length == input.Length ? "$" : "[^\\w]"));
+                FormattedConsoleOutput.Debug("Input: " + input + ", regex = " + reg + ". Match = " + reg.IsMatch(input));
                 if (reg.IsMatch(input)) return false; //If we match our regex, then the string does contain at least one of our substrings, so our answer is false.
             }
         }
